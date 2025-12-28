@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 Infraestrutura N8N - Dashboard</title>
+    <meta name="description" content="Dashboard de monitoramento em tempo real da infraestrutura N8N">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiSW5mcmFlc3RydXR1cmEgTjhOIiwic2hvcnRfbmFtZSI6Ik44TiIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjNjM2NmYxIn0=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--surface-light);
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .container-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--surface-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .container-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .container-name {
+            font-weight: 500;
+        }
+
+        .container-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-healthy { background: var(--success); }
+        .status-running { background: var(--warning); }
+        .status-unhealthy { background: var(--danger); }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--surface-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 0.3s ease;
+        }
+
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-banner.show {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            border: 3px solid var(--surface-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 Infraestrutura N8N</h1>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span id="statusText">Carregando...</span>
+            </div>
+        </header>
+
+        <div class="error-banner" id="errorBanner">
+            ❌ <strong>Erro ao carregar dados</strong><br>
+            Verifique se o workflow N8N está rodando e se a URL do Gist está correta.
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <p>Carregando dados...</p>
+        </div>
+
+        <div id="dashboardContent" style="display: none;">
+            <!-- System Resources -->
+            <div class="card">
+                <h2>💻 Recursos do Sistema</h2>
+                <div class="stat">
+                    <span class="stat-label">Hostname</span>
+                    <span class="stat-value" id="hostname">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Uptime</span>
+                    <span class="stat-value" id="uptime">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">CPU</span>
+                    <span class="stat-value" id="cpu">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Memória</span>
+                    <span class="stat-value" id="memory">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Disco</span>
+                    <span class="stat-value" id="disk">-</span>
+                </div>
+            </div>
+
+            <!-- Containers -->
+            <div class="card">
+                <h2>🐳 Containers Docker</h2>
+                <div id="containersList"></div>
+            </div>
+
+            <!-- Workflows -->
+            <div class="card">
+                <h2>⚡ Workflows N8N</h2>
+                <div class="stat">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value" id="workflowsTotal">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Ativos</span>
+                    <span class="stat-value" id="workflowsActive">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Execuções (24h)</span>
+                    <span class="stat-value" id="executions24h">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Taxa de Sucesso</span>
+                    <span class="stat-value" id="successRate">-</span>
+                </div>
+            </div>
+
+            <!-- Backups -->
+            <div class="card">
+                <h2>💾 Backups</h2>
+                <div class="stat">
+                    <span class="stat-label">Último Diário</span>
+                    <span class="stat-value" id="lastDaily">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Último Semanal</span>
+                    <span class="stat-value" id="lastWeekly">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Próximo Diário</span>
+                    <span class="stat-value" id="nextDaily">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Próximo Semanal</span>
+                    <span class="stat-value" id="nextWeekly">-</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            🔄 Próxima atualização em <span id="countdown">60</span>s<br>
+            Dashboard v1.0 • N8N Infrastructure Monitor
+        </footer>
+    </div>
+
+    <script>
+        // ⚠️ IMPORTANTE: Substitua pelo ID do seu Gist
+        const GIST_ID = '6f8186d15f6e65b08c04642242607d6e';
+        const GIST_URL = `https://api.github.com/gists/${GIST_ID}`;
+        const UPDATE_INTERVAL = 60000; // 60 segundos
+
+        let countdown = 60;
+        let updateTimer;
+        let countdownTimer;
+
+        // Buscar dados do Gist via API
+        async function loadData() {
+            try {
+                console.log('Buscando dados do Gist...');
+                
+                const response = await fetch(GIST_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const gistData = await response.json();
+                console.log('Gist recebido:', gistData);
+                
+                // Extrair conteúdo do arquivo
+                const fileContent = gistData.files['dashboard-status.json'].content;
+                const data = JSON.parse(fileContent);
+                console.log('Dados parseados:', data);
+                
+                updateDashboard(data);
+                hideError();
+                showContent();
+                updateStatusText('Online');
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showError();
+                updateStatusText('Erro');
+            }
+        }
+
+        // Atualizar dashboard com os dados
+        function updateDashboard(data) {
+            // System
+            document.getElementById('hostname').textContent = data.system.hostname || '-';
+            document.getElementById('uptime').textContent = `${data.system.uptime_hours || 0}h`;
+            document.getElementById('cpu').textContent = `${data.system.cpu_percent || 0}%`;
+            document.getElementById('memory').textContent = `${data.system.memory_percent || 0}%`;
+            document.getElementById('disk').textContent = `${data.system.disk_percent || 0}%`;
+
+            // Containers
+            const containersList = document.getElementById('containersList');
+            containersList.innerHTML = '';
+            
+            if (data.containers && data.containers.length > 0) {
+                data.containers.forEach(container => {
+                    const item = document.createElement('div');
+                    item.className = 'container-item';
+                    
+                    const statusClass = container.health === 'healthy' ? 'status-healthy' : 
+                                       container.status === 'running' ? 'status-running' : 
+                                       'status-unhealthy';
+                    
+                    item.innerHTML = `
+                        <div class="container-name">${container.name}</div>
+                        <div class="container-status">
+                            <span class="status-icon ${statusClass}"></span>
+                            <span>${container.health || container.status}</span>
+                        </div>
+                    `;
+                    containersList.appendChild(item);
+                });
+            }
+
+            // Workflows
+            document.getElementById('workflowsTotal').textContent = data.workflows.total || 0;
+            document.getElementById('workflowsActive').textContent = data.workflows.active || 0;
+            document.getElementById('executions24h').textContent = data.workflows.executions_24h || 0;
+            document.getElementById('successRate').textContent = `${data.workflows.success_rate || 0}%`;
+
+            // Backups
+            document.getElementById('lastDaily').textContent = data.backups.last_daily || '-';
+            document.getElementById('lastWeekly').textContent = data.backups.last_weekly || '-';
+            document.getElementById('nextDaily').textContent = data.backups.next_daily || '-';
+            document.getElementById('nextWeekly').textContent = data.backups.next_weekly || '-';
+        }
+
+        // UI Helpers
+        function showError() {
+            document.getElementById('errorBanner').classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('errorBanner').classList.remove('show');
+        }
+
+        function showContent() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+
+        function updateStatusText(status) {
+            document.getElementById('statusText').textContent = status;
+        }
+
+        function updateCountdown() {
+            document.getElementById('countdown').textContent = countdown;
+            countdown--;
+            
+            if (countdown < 0) {
+                countdown = 60;
+                loadData();
+            }
+        }
+
+        // Inicializar
+        function init() {
+            console.log('Iniciando dashboard...');
+            loadData();
+            
+            // Atualizar a cada minuto
+            updateTimer = setInterval(loadData, UPDATE_INTERVAL);
+            
+            // Countdown a cada segundo
+            countdownTimer = setInterval(updateCountdown, 1000);
+        }
+
+        // Cleanup ao sair
+        window.addEventListener('beforeunload', () => {
+            clearInterval(updateTimer);
+            clearInterval(countdownTimer);
+        });
+
+        // Iniciar quando a página carregar
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
