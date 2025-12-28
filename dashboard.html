@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0e27">
+    <title>Infraestrutura N8N</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Dark Theme - Minimalista Técnico */
+            --bg-primary: #0a0e27;
+            --bg-secondary: #121629;
+            --bg-card: #1a1f3a;
+            --bg-card-hover: #1f2542;
+            
+            --text-primary: #e8eaed;
+            --text-secondary: #9aa0b8;
+            --text-dim: #6b7280;
+            
+            --accent-success: #00ff88;
+            --accent-warning: #ffaa00;
+            --accent-critical: #ff3366;
+            --accent-info: #00d4ff;
+            
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.16);
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            
+            /* Typography */
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-display: 'Syne', sans-serif;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.6;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+        
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Header */
+        header {
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        h1 {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent-success) 0%, var(--accent-info) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .last-update {
+            font-size: 12px;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Status Card */
+        .status-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-success);
+            transition: width 0.3s ease;
+        }
+        
+        .status-card.warning::before { background: var(--accent-warning); }
+        .status-card.critical::before { background: var(--accent-critical); }
+        
+        .status-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .status-title {
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-badge.healthy {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent-success);
+        }
+        
+        .status-badge.warning {
+            background: rgba(255, 170, 0, 0.15);
+            color: var(--accent-warning);
+        }
+        
+        .status-badge.critical {
+            background: rgba(255, 51, 102, 0.15);
+            color: var(--accent-critical);
+        }
+        
+        /* Container info */
+        .container-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .container-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .container-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .metric {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-success);
+            border-radius: 3px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-fill.warning { background: var(--accent-warning); }
+        .progress-fill.critical { background: var(--accent-critical); }
+        
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, var(--accent-success) 0%, var(--accent-info) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Alert */
+        .alert {
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert.critical {
+            background: rgba(255, 51, 102, 0.1);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+        
+        .alert-icon {
+            font-size: 20px;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        
+        .alert-message {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Footer */
+        footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        
+        .refresh-countdown {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            margin-top: 12px;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            border: 3px solid var(--border-subtle);
+            border-top-color: var(--accent-success);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Section title */
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin: 32px 0 16px;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent-success);
+        }
+        
+        /* Uptime chart */
+        .uptime-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 80px;
+            gap: 4px;
+            margin-top: 16px;
+        }
+        
+        .uptime-bar {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .uptime-bar:hover {
+            background: var(--accent-success);
+        }
+        
+        .uptime-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* PWA install prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 16px 24px;
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .install-prompt button {
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 Infraestrutura N8N</h1>
+            <div class="last-update">
+                <span class="status-pulse"></span>
+                <span id="lastUpdate">Carregando...</span>
+            </div>
+        </header>
+        
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Carregando métricas...</p>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="refresh-countdown">
+                🔄 Próxima atualização em <strong id="countdown">60</strong>s
+            </div>
+            <p style="margin-top: 16px;">Dashboard v1.0 • N8N Infrastructure Monitor</p>
+        </footer>
+    </div>
+    
+    <div class="install-prompt" id="installPrompt">
+        <p>📱 Adicionar à tela inicial?</p>
+        <button id="installBtn">Instalar App</button>
+    </div>
+
+    <script>
+        // Configuration
+        const GIST_URL = 'https://gist.githubusercontent.com/vmn8ndocker/6f8186d15f6e65b08c04642242607d6e/raw/588e85227b69ca5114b81de3f77d164ecac89963/dashboard-status.json';
+        const REFRESH_INTERVAL = 60000; // 60 seconds
+        
+        let refreshTimer;
+        let countdownTimer;
+        let currentData = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            startRefreshTimer();
+            setupPWA();
+        });
+        
+        // Load data from GitHub Gist
+        async function loadData() {
+            try {
+                const response = await fetch(GIST_URL + '?_=' + Date.now());
+                const data = await response.json();
+                currentData = data;
+                renderDashboard(data);
+                updateLastUpdateTime(data.timestamp);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError();
+            }
+        }
+        
+        // Render dashboard
+        function renderDashboard(data) {
+            const content = document.getElementById('content');
+            
+            let html = '';
+            
+            // Overall status
+            const statusClass = data.system.status === 'healthy' ? 'healthy' : 
+                               data.system.status === 'warning' ? 'warning' : 'critical';
+            
+            html += `
+                <div class="status-card ${statusClass}">
+                    <div class="status-header">
+                        <div class="status-title">Status Geral</div>
+                        <div class="status-badge ${statusClass}">${getStatusIcon(data.system.status)} ${data.system.status.toUpperCase()}</div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${data.system.containers_running}/${data.system.containers_total}</div>
+                            <div class="stat-label">Containers</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${formatUptime(data.system.uptime_seconds)}</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Alerts
+            if (data.alerts && data.alerts.length > 0) {
+                html += '<div class="section-title">⚠️ Alertas</div>';
+                data.alerts.forEach(alert => {
+                    const alertClass = alert.level === 'critical' ? 'critical' : 'warning';
+                    html += `
+                        <div class="alert ${alertClass}">
+                            <div class="alert-icon">${alert.level === 'critical' ? '🔴' : '🟡'}</div>
+                            <div class="alert-content">
+                                <div class="alert-title">${alert.level.toUpperCase()}</div>
+                                <div class="alert-message">${alert.message}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Containers
+            html += '<div class="section-title">🐳 Containers</div>';
+            data.containers.forEach(container => {
+                const healthClass = container.health === 'healthy' ? 'healthy' : 
+                                   container.health === 'unhealthy' ? 'critical' : '';
+                
+                const memPercent = Math.round((container.memory_used_mb / container.memory_limit_mb) * 100);
+                const memClass = memPercent > 90 ? 'critical' : memPercent > 75 ? 'warning' : '';
+                
+                html += `
+                    <div class="container-item">
+                        <div class="container-header">
+                            <div class="container-name">${container.name}</div>
+                            <div class="status-badge ${healthClass}">${container.health || container.status}</div>
+                        </div>
+                        <div class="metric-grid">
+                            <div class="metric">
+                                <div class="metric-label">Memória</div>
+                                <div class="metric-value">${container.memory_used_mb}MB / ${container.memory_limit_mb}MB</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">CPU</div>
+                                <div class="metric-value">${container.cpu_percent}%</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${memClass}" style="width: ${memPercent}%"></div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 12px; color: var(--text-dim);">
+                            Uptime: ${container.uptime}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // System Resources
+            html += '<div class="section-title">💻 Recursos do Sistema</div>';
+            
+            const ramPercent = Math.round((data.resources.ram_used_gb / data.resources.ram_total_gb) * 100);
+            const diskPercent = Math.round((data.resources.disk_used_gb / data.resources.disk_total_gb) * 100);
+            
+            html += `
+                <div class="container-item">
+                    <div class="metric-grid" style="grid-template-columns: 1fr;">
+                        <div class="metric">
+                            <div class="metric-label">💾 Memória</div>
+                            <div class="metric-value">${data.resources.ram_used_gb.toFixed(1)}GB / ${data.resources.ram_total_gb}GB</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${ramPercent > 90 ? 'critical' : ramPercent > 75 ? 'warning' : ''}" 
+                                     style="width: ${ramPercent}%"></div>
+                            </div>
+                        </div>
+                        <div class="metric" style="margin-top: 16px;">
+                            <div class="metric-label">💿 Disco</div>
+                            <div class="metric-value">${data.resources.disk_used_gb}GB / ${data.resources.disk_total_gb}GB</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${diskPercent > 90 ? 'critical' : diskPercent > 85 ? 'warning' : ''}" 
+                                     style="width: ${diskPercent}%"></div>
+                            </div>
+                        </div>
+                        <div class="metric" style="margin-top: 16px;">
+                            <div class="metric-label">🔥 CPU</div>
+                            <div class="metric-value">${data.resources.cpu_percent}%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${data.resources.cpu_percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Backups
+            if (data.backups) {
+                html += '<div class="section-title">💾 Backups</div>';
+                html += `
+                    <div class="container-item">
+                        <div class="metric-grid">
+                            <div class="metric">
+                                <div class="metric-label">Último Diário</div>
+                                <div class="metric-value">${formatDate(data.backups.last_daily.timestamp)}</div>
+                                <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                    ${data.backups.last_daily.size_kb}KB • ${data.backups.last_daily.validated ? '✅ Validado' : '⚠️ Não validado'}
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Último Semanal</div>
+                                <div class="metric-value">${formatDate(data.backups.last_weekly.timestamp)}</div>
+                                <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
+                                    ${data.backups.last_weekly.size_gb.toFixed(1)}GB
+                                </div>
+                            </div>
+                        </div>
+                        <div class="metric" style="margin-top: 16px;">
+                            <div class="metric-label">☁️ Dropbox</div>
+                            <div class="metric-value">${data.backups.dropbox_used_gb.toFixed(2)}GB / ${data.backups.dropbox_total_gb}GB</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${data.backups.dropbox_percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // N8N Workflows
+            if (data.n8n_workflows) {
+                html += '<div class="section-title">⚡ Workflows N8N</div>';
+                const successRate = data.n8n_workflows.executions_24h.success_rate;
+                html += `
+                    <div class="container-item">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">${data.n8n_workflows.total}</div>
+                                <div class="stat-label">Total Workflows</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${successRate.toFixed(1)}%</div>
+                                <div class="stat-label">Taxa Sucesso 24h</div>
+                            </div>
+                        </div>
+                        <div class="metric-grid" style="margin-top: 16px;">
+                            <div class="metric">
+                                <div class="metric-label">✅ Sucesso</div>
+                                <div class="metric-value">${data.n8n_workflows.executions_24h.success}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">❌ Erros</div>
+                                <div class="metric-value">${data.n8n_workflows.executions_24h.error}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Uptime History
+            if (data.uptime_7days) {
+                html += '<div class="section-title">📊 Histórico (7 dias)</div>';
+                html += '<div class="container-item">';
+                html += '<div class="uptime-chart">';
+                
+                const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+                days.forEach(day => {
+                    const percent = data.uptime_7days[day] || 0;
+                    const height = Math.max(percent * 0.8, 10); // min 10px
+                    html += `
+                        <div class="uptime-bar" style="height: ${height}%" title="${day.toUpperCase()}: ${percent}%">
+                            <div class="uptime-label">${day}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                html += `<div style="text-align: center; margin-top: 32px; font-size: 12px; color: var(--text-dim);">
+                    Média: ${data.uptime_7days.average.toFixed(1)}% uptime
+                </div>`;
+                html += '</div>';
+            }
+            
+            content.innerHTML = html;
+        }
+        
+        // Helper functions
+        function getStatusIcon(status) {
+            const icons = {
+                'healthy': '🟢',
+                'warning': '🟡',
+                'critical': '🔴'
+            };
+            return icons[status] || '⚪';
+        }
+        
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            if (days > 0) {
+                return `${days}d ${hours}h`;
+            }
+            return `${hours}h`;
+        }
+        
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 3600000) { // < 1 hour
+                return Math.floor(diff / 60000) + ' min atrás';
+            } else if (diff < 86400000) { // < 1 day
+                return Math.floor(diff / 3600000) + 'h atrás';
+            } else {
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                return `${day}/${month}`;
+            }
+        }
+        
+        function updateLastUpdateTime(timestamp) {
+            const date = new Date(timestamp);
+            const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('lastUpdate').textContent = `Atualizado às ${time}`;
+        }
+        
+        function showError() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="alert critical">
+                    <div class="alert-icon">❌</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Erro ao carregar dados</div>
+                        <div class="alert-message">Verifique se o workflow N8N está rodando e se a URL do Gist está correta.</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Refresh timer
+        function startRefreshTimer() {
+            let countdown = 60;
+            
+            countdownTimer = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+                
+                if (countdown <= 0) {
+                    countdown = 60;
+                }
+            }, 1000);
+            
+            refreshTimer = setInterval(() => {
+                loadData();
+            }, REFRESH_INTERVAL);
+        }
+        
+        // PWA support
+        let deferredPrompt;
+        
+        function setupPWA() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installPrompt').style.display = 'block';
+            });
+            
+            document.getElementById('installBtn').addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                }
+            });
+        }
+        
+        // Visibility change (pause refresh when tab is hidden)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(refreshTimer);
+                clearInterval(countdownTimer);
+            } else {
+                loadData();
+                startRefreshTimer();
+            }
+        });
+    </script>
+</body>
+</html>
