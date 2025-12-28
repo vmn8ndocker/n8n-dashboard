@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infraestrutura N8N - Dashboard</title>
+    <meta name="description" content="Dashboard de monitoramento em tempo real da infraestrutura N8N">
+    <meta name="theme-color" content="#6366f1">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-banner.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            border: 3px solid var(--surface-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* CARDS GRID */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* RESOURCE CARD */
+        .resource-card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+
+        .resource-card.expanded {
+            grid-column: 1 / -1;
+            border-color: var(--primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .health-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .health-indicator.green { 
+            background: var(--success);
+            color: var(--success);
+        }
+        .health-indicator.yellow { 
+            background: var(--warning);
+            color: var(--warning);
+        }
+        .health-indicator.red { 
+            background: var(--danger);
+            color: var(--danger);
+        }
+
+        .card-summary {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .expand-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .resource-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* DETAILS */
+        .card-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .resource-card.expanded .card-details {
+            max-height: 2000px;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--surface-light);
+        }
+
+        .detail-section {
+            margin-bottom: 1rem;
+        }
+
+        .detail-section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--surface-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: var(--text);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .item-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .item-status.green { background: var(--success); }
+        .item-status.yellow { background: var(--warning); }
+        .item-status.red { background: var(--danger); }
+        .item-status.gray { background: var(--text-muted); opacity: 0.5; }
+
+        .metric-value {
+            padding: 0.25rem 0.5rem;
+            background: var(--surface);
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metric-value.critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .metric-value.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .metric-value.good {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .resource-card.expanded {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Infraestrutura N8N</h1>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span id="statusText">Carregando...</span>
+            </div>
+        </header>
+
+        <div class="error-banner" id="errorBanner">
+            <strong>Erro ao carregar dados</strong><br>
+            Verifique se o workflow N8N esta rodando e se a URL do Gist esta correta.
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <p>Carregando dados...</p>
+        </div>
+
+        <div id="dashboardContent" style="display: none;">
+            <div class="cards-grid" id="cardsGrid">
+                <!-- Cards gerados dinamicamente -->
+            </div>
+        </div>
+
+        <footer>
+            Proxima atualizacao em <span id="countdown">60</span>s<br>
+            Dashboard v3.0 - N8N Infrastructure Monitor
+        </footer>
+    </div>
+
+    <script>
+        const GIST_ID = '6f8186d15f6e65b08c04642242607d6e';
+        const GIST_URL = 'https://api.github.com/gists/' + GIST_ID;
+        const UPDATE_INTERVAL = 60000;
+
+        let countdown = 60;
+        let updateTimer;
+        let countdownTimer;
+
+        // Buscar dados
+        async function loadData() {
+            try {
+                const response = await fetch(GIST_URL);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                
+                const gistData = await response.json();
+                const fileContent = gistData.files['dashboard-status.json'].content;
+                const data = JSON.parse(fileContent);
+                
+                updateDashboard(data);
+                hideError();
+                showContent();
+                updateStatusText('Online');
+            } catch (error) {
+                console.error('Erro:', error);
+                showError();
+                updateStatusText('Erro');
+            }
+        }
+
+        // Atualizar dashboard
+        function updateDashboard(data) {
+            const grid = document.getElementById('cardsGrid');
+            grid.innerHTML = '';
+
+            // 1. RECURSOS DO SISTEMA
+            const systemHealth = analyzeSystemHealth(data.system);
+            grid.appendChild(createResourceCard(
+                'system',
+                'Recursos do Sistema',
+                systemHealth.status,
+                systemHealth.summary,
+                [
+                    {
+                        title: 'Metricas',
+                        items: [
+                            { 
+                                label: 'CPU', 
+                                value: data.system.cpu_percent + '%',
+                                status: getMetricStatus(data.system.cpu_percent, 70, 90),
+                                valueClass: getMetricClass(data.system.cpu_percent, 70, 90)
+                            },
+                            { 
+                                label: 'Memoria', 
+                                value: data.system.memory_percent + '%',
+                                status: getMetricStatus(data.system.memory_percent, 70, 90),
+                                valueClass: getMetricClass(data.system.memory_percent, 70, 90)
+                            },
+                            { 
+                                label: 'Disco', 
+                                value: data.system.disk_percent + '%',
+                                status: getMetricStatus(data.system.disk_percent, 70, 90),
+                                valueClass: getMetricClass(data.system.disk_percent, 70, 90)
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Informacoes',
+                        items: [
+                            { label: 'Hostname', value: data.system.hostname },
+                            { label: 'Uptime', value: data.system.uptime_hours + ' horas' }
+                        ]
+                    }
+                ]
+            ));
+
+            // 2. CONTAINERS DOCKER
+            const containersHealth = analyzeContainersHealth(data.containers);
+            grid.appendChild(createResourceCard(
+                'containers',
+                'Containers Docker',
+                containersHealth.status,
+                containersHealth.summary,
+                [
+                    {
+                        title: 'Status dos Containers',
+                        items: data.containers.map(c => ({
+                            label: c.name,
+                            value: c.health || c.status,
+                            status: c.health === 'healthy' ? 'green' : c.status === 'running' ? 'yellow' : 'red',
+                            extra: c.memory_mb ? c.memory_mb + ' MB' : ''
+                        }))
+                    }
+                ]
+            ));
+
+            // 3. WORKFLOWS N8N
+            const workflowsHealth = analyzeWorkflowsHealth(
+                data.workflows_list || [],  // Lista completa de workflows
+                data.executions || []        // Array de execuções
+            );
+            // Separar workflows ativos e inativos
+            const activeWorkflows = workflowsHealth.workflows.filter(w => w.active);
+            const inactiveWorkflows = workflowsHealth.workflows.filter(w => !w.active);
+            
+            const workflowSections = [];
+            
+            // Seção de workflows ativos
+            if (activeWorkflows.length > 0) {
+                workflowSections.push({
+                    title: 'Workflows Ativos',
+                    items: activeWorkflows.map(w => ({
+                        label: w.name,
+                        value: w.reason,
+                        status: w.status === 'red' ? 'red' : 
+                               w.status === 'yellow' ? 'yellow' : 'green'
+                    }))
+                });
+            }
+            
+            // Seção de workflows inativos (se houver)
+            if (inactiveWorkflows.length > 0 && inactiveWorkflows.length <= 5) {
+                workflowSections.push({
+                    title: 'Workflows Inativos',
+                    items: inactiveWorkflows.map(w => ({
+                        label: w.name,
+                        value: 'Inativo'
+                    }))
+                });
+            }
+            
+            grid.appendChild(createResourceCard(
+                'workflows',
+                'Workflows N8N',
+                workflowsHealth.status,
+                workflowsHealth.summary,
+                workflowSections
+            ));
+
+            // 4. BACKUPS
+            const backupsHealth = analyzeBackupsHealth(data.backups);
+            grid.appendChild(createResourceCard(
+                'backups',
+                'Backups',
+                backupsHealth.status,
+                backupsHealth.summary,
+                [
+                    {
+                        title: 'Backups Recentes',
+                        items: [
+                            { label: 'Ultimo Diario', value: data.backups.last_daily },
+                            { label: 'Ultimo Semanal', value: data.backups.last_weekly }
+                        ]
+                    },
+                    {
+                        title: 'Proximos Agendados',
+                        items: [
+                            { label: 'Proximo Diario', value: data.backups.next_daily },
+                            { label: 'Proximo Semanal', value: data.backups.next_weekly }
+                        ]
+                    }
+                ]
+            ));
+        }
+
+        // ANALISAR SAÚDE DO SISTEMA
+        function analyzeSystemHealth(system) {
+            const issues = [];
+            
+            if (system.cpu_percent >= 90) issues.push('CPU critica');
+            else if (system.cpu_percent >= 70) issues.push('CPU elevada');
+            
+            if (system.memory_percent >= 90) issues.push('Memoria critica');
+            else if (system.memory_percent >= 70) issues.push('Memoria elevada');
+            
+            if (system.disk_percent >= 90) issues.push('Disco critico');
+            else if (system.disk_percent >= 70) issues.push('Disco elevado');
+
+            if (issues.length === 0) {
+                return { status: 'green', summary: 'Todos recursos operando normalmente' };
+            } else if (issues.some(i => i.includes('critica') || i.includes('critico'))) {
+                return { status: 'red', summary: 'CRITICO: ' + issues.join(', ') };
+            } else {
+                return { status: 'yellow', summary: 'ATENCAO: ' + issues.join(', ') };
+            }
+        }
+
+        // ANALISAR SAÚDE DOS CONTAINERS
+        function analyzeContainersHealth(containers) {
+            // Containers que NAO precisam de healthcheck (considerados OK mesmo "running")
+            const noHealthcheckNeeded = ['autoheal', 'portainer'];
+            
+            // Containers com problema REAL
+            const unhealthy = containers.filter(c => 
+                c.health === 'unhealthy' || 
+                c.status === 'exited' || 
+                c.status === 'restarting'
+            );
+            
+            // Containers saudaveis (healthy OU running sem precisar de healthcheck)
+            const healthy = containers.filter(c => 
+                c.health === 'healthy' || 
+                (c.status === 'running' && noHealthcheckNeeded.includes(c.name))
+            );
+
+            if (unhealthy.length > 0) {
+                const names = unhealthy.map(c => c.name).join(', ');
+                return { 
+                    status: 'red', 
+                    summary: 'CRITICO: ' + names + ' com problema' 
+                };
+            } else if (healthy.length === containers.length) {
+                return { 
+                    status: 'green', 
+                    summary: containers.length + ' containers operacionais' 
+                };
+            } else {
+                // Containers running mas que DEVERIAM ter healthcheck
+                const noHealthcheck = containers.length - healthy.length - unhealthy.length;
+                return { 
+                    status: 'yellow', 
+                    summary: 'ATENCAO: ' + noHealthcheck + ' container(s) sem healthcheck' 
+                };
+            }
+        }
+
+        // ANALISAR SAÚDE DOS WORKFLOWS
+        function analyzeWorkflowsHealth(workflows, executionsData) {
+            const executions = executionsData || [];
+            const now = new Date();
+            
+            // Analisar cada workflow individualmente
+            const workflowsStatus = workflows.map(w => {
+                // Pegar execuções deste workflow
+                const workflowExecs = executions
+                    .filter(e => e.workflowId === w.id)
+                    .sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
+                
+                // Verificar se está travado (rodando > 30 min)
+                const stuck = workflowExecs.find(e => {
+                    if (e.status !== 'running') return false;
+                    const started = new Date(e.startedAt);
+                    const runningMinutes = (now - started) / 1000 / 60;
+                    return runningMinutes > 30;
+                });
+                
+                // Pegar últimas 5 execuções finalizadas
+                const last5 = workflowExecs
+                    .filter(e => e.status !== 'running' && e.status !== 'waiting')
+                    .slice(0, 5);
+                
+                const last5Failed = last5.filter(e => 
+                    e.status === 'error' || e.status === 'crashed'
+                ).length;
+                
+                // Determinar status do workflow
+                let status = 'green';
+                let reason = 'OK';
+                
+                if (!w.active) {
+                    status = 'gray';
+                    reason = 'Inativo';
+                } else if (stuck) {
+                    status = 'red';
+                    reason = 'Travado';
+                } else if (last5.length === 0) {
+                    status = 'green';
+                    reason = 'Sem execucoes';
+                } else if (last5.length >= 5 && last5Failed === 5) {
+                    status = 'red';
+                    reason = 'Ultimas 5 falharam';
+                } else if (last5.length >= 3 && last5Failed >= 3) {
+                    status = 'red';
+                    reason = last5Failed + '/5 falharam';
+                } else if (last5Failed > 0) {
+                    status = 'yellow';
+                    reason = last5Failed + '/5 com falha';
+                } else {
+                    status = 'green';
+                    reason = 'OK';
+                }
+                
+                return {
+                    id: w.id,
+                    name: w.name,
+                    active: w.active,
+                    status: status,
+                    reason: reason,
+                    lastExecution: last5[0] ? last5[0].startedAt : null
+                };
+            });
+            
+            // Contar por status
+            const activeWorkflows = workflowsStatus.filter(w => w.active);
+            const healthyActive = activeWorkflows.filter(w => w.status === 'green').length;
+            const stuckActive = activeWorkflows.filter(w => w.status === 'red' && w.reason === 'Travado').length;
+            const failingActive = activeWorkflows.filter(w => w.status === 'red' && w.reason !== 'Travado').length;
+            const warningActive = activeWorkflows.filter(w => w.status === 'yellow').length;
+            
+            // Determinar status geral
+            let overallStatus = 'green';
+            let summary = '';
+            
+            if (stuckActive > 0) {
+                overallStatus = 'red';
+                summary = 'CRITICO: ' + stuckActive + ' workflow(s) travado(s)';
+            } else if (failingActive > 0) {
+                overallStatus = 'red';
+                summary = 'CRITICO: ' + failingActive + ' workflow(s) falhando';
+            } else if (warningActive > 0) {
+                overallStatus = 'yellow';
+                summary = 'ATENCAO: ' + warningActive + ' workflow(s) com falhas';
+            } else if (activeWorkflows.length === 0) {
+                overallStatus = 'yellow';
+                summary = 'Nenhum workflow ativo';
+            } else {
+                overallStatus = 'green';
+                summary = healthyActive + '/' + activeWorkflows.length + ' ativos saudaveis';
+            }
+            
+            return {
+                status: overallStatus,
+                summary: summary,
+                workflows: workflowsStatus
+            };
+        }
+
+        // ANALISAR SAÚDE DOS BACKUPS
+        function analyzeBackupsHealth(backups) {
+            // TODO: Implementar lógica real quando tiver timestamp dos backups
+            // Por enquanto, sempre verde
+            return { 
+                status: 'green', 
+                summary: 'Sistema de backup operacional' 
+            };
+        }
+
+        // Criar card de recurso
+        function createResourceCard(id, title, health, summary, sections) {
+            const card = document.createElement('div');
+            card.className = 'resource-card';
+            card.dataset.id = id;
+
+            const sectionsHtml = sections.map(section => {
+                const itemsHtml = section.items.map(item => {
+                    const statusDot = item.status ? '<span class="item-status ' + item.status + '"></span>' : '';
+                    const valueClass = item.valueClass ? ' class="metric-value ' + item.valueClass + '"' : '';
+                    const extra = item.extra ? '<small style="color: var(--text-muted); margin-left: 0.5rem;">' + item.extra + '</small>' : '';
+                    
+                    return '<div class="detail-item">' +
+                        '<span class="detail-label">' + statusDot + item.label + '</span>' +
+                        '<span class="detail-value"><span' + valueClass + '>' + item.value + '</span>' + extra + '</span>' +
+                        '</div>';
+                }).join('');
+
+                return '<div class="detail-section">' +
+                    '<div class="detail-section-title">' + section.title + '</div>' +
+                    itemsHtml +
+                    '</div>';
+            }).join('');
+
+            card.innerHTML = 
+                '<div class="card-header">' +
+                    '<span class="card-title">' + title + '</span>' +
+                    '<span class="health-indicator ' + health + '"></span>' +
+                '</div>' +
+                '<div class="card-summary">' + summary + '</div>' +
+                '<div class="expand-hint">Clique para detalhes <span class="expand-icon">▼</span></div>' +
+                '<div class="card-details">' + sectionsHtml + '</div>';
+
+            card.addEventListener('click', function() {
+                toggleCard(card);
+            });
+
+            return card;
+        }
+
+        // Toggle card
+        function toggleCard(card) {
+            const wasExpanded = card.classList.contains('expanded');
+            document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('expanded'));
+            if (!wasExpanded) card.classList.add('expanded');
+        }
+
+        // Helpers
+        function getMetricStatus(value, yellowThreshold, redThreshold) {
+            if (value >= redThreshold) return 'red';
+            if (value >= yellowThreshold) return 'yellow';
+            return 'green';
+        }
+
+        function getMetricClass(value, yellowThreshold, redThreshold) {
+            if (value >= redThreshold) return 'critical';
+            if (value >= yellowThreshold) return 'warning';
+            return 'good';
+        }
+
+        function showError() {
+            document.getElementById('errorBanner').classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('errorBanner').classList.remove('show');
+        }
+
+        function showContent() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+
+        function updateStatusText(status) {
+            document.getElementById('statusText').textContent = status;
+        }
+
+        function updateCountdown() {
+            document.getElementById('countdown').textContent = countdown;
+            countdown--;
+            if (countdown < 0) {
+                countdown = 60;
+                loadData();
+            }
+        }
+
+        function init() {
+            loadData();
+            updateTimer = setInterval(loadData, UPDATE_INTERVAL);
+            countdownTimer = setInterval(updateCountdown, 1000);
+        }
+
+        window.addEventListener('beforeunload', function() {
+            clearInterval(updateTimer);
+            clearInterval(countdownTimer);
+        });
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
