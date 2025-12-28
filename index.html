@@ -2,867 +2,458 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0a0e27">
-    <title>Infraestrutura N8N</title>
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ðŸ¥ Infraestrutura N8N - Dashboard</title>
+    <meta name="description" content="Dashboard de monitoramento em tempo real da infraestrutura N8N">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiSW5mcmFlc3RydXR1cmEgTjhOIiwic2hvcnRfbmFtZSI6Ik44TiIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwidGhlbWVfY29sb3IiOiIjNjM2NmYxIn0=">
     <style>
-        :root {
-            /* Dark Theme - Minimalista Técnico */
-            --bg-primary: #0a0e27;
-            --bg-secondary: #121629;
-            --bg-card: #1a1f3a;
-            --bg-card-hover: #1f2542;
-            
-            --text-primary: #e8eaed;
-            --text-secondary: #9aa0b8;
-            --text-dim: #6b7280;
-            
-            --accent-success: #00ff88;
-            --accent-warning: #ffaa00;
-            --accent-critical: #ff3366;
-            --accent-info: #00d4ff;
-            
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-strong: rgba(255, 255, 255, 0.16);
-            
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-            
-            /* Typography */
-            --font-mono: 'JetBrains Mono', monospace;
-            --font-display: 'Syne', sans-serif;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
         body {
-            font-family: var(--font-mono);
-            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             line-height: 1.6;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
-        
-        /* Animated background grid */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.5;
-        }
-        
+
         .container {
-            max-width: 640px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
+            padding: 1rem;
         }
-        
-        /* Header */
+
         header {
-            margin-bottom: 32px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-subtle);
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        h1 {
-            font-family: var(--font-display);
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, var(--accent-success) 0%, var(--accent-info) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
-        
-        .last-update {
-            font-size: 12px;
-            color: var(--text-dim);
-            display: flex;
+
+        .status-badge {
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
         }
-        
-        .status-pulse {
+
+        .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--accent-success);
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            background: var(--success);
+            animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+            50% { opacity: 0.5; }
         }
-        
-        /* Status Card */
-        .status-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-strong);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--accent-success);
-            transition: width 0.3s ease;
-        }
-        
-        .status-card.warning::before { background: var(--accent-warning); }
-        .status-card.critical::before { background: var(--accent-critical); }
-        
-        .status-card:hover {
-            background: var(--bg-card-hover);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .status-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        
-        .status-title {
-            font-family: var(--font-display);
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        .status-badge.healthy {
-            background: rgba(0, 255, 136, 0.15);
-            color: var(--accent-success);
-        }
-        
-        .status-badge.warning {
-            background: rgba(255, 170, 0, 0.15);
-            color: var(--accent-warning);
-        }
-        
-        .status-badge.critical {
-            background: rgba(255, 51, 102, 0.15);
-            color: var(--accent-critical);
-        }
-        
-        /* Container info */
-        .container-item {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-        
-        .container-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        
-        .container-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .metric-grid {
+
+        .grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-        
-        .metric {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+
+        .card {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
-        .metric-label {
-            font-size: 11px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        .metric-value {
-            font-size: 16px;
+
+        .card h2 {
+            font-size: 1.125rem;
             font-weight: 600;
-            font-family: var(--font-mono);
+            margin-bottom: 1rem;
+            color: var(--text);
         }
-        
-        /* Progress bar */
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--surface-light);
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .container-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--surface-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .container-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .container-name {
+            font-weight: 500;
+        }
+
+        .container-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-healthy { background: var(--success); }
+        .status-running { background: var(--warning); }
+        .status-unhealthy { background: var(--danger); }
+
         .progress-bar {
             width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
+            height: 8px;
+            background: var(--surface-light);
+            border-radius: 4px;
             overflow: hidden;
-            margin-top: 8px;
+            margin-top: 0.5rem;
         }
-        
+
         .progress-fill {
             height: 100%;
-            background: var(--accent-success);
-            border-radius: 3px;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 0.3s ease;
         }
-        
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.3),
-                transparent
-            );
-            animation: shimmer 2s infinite;
+
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
         }
-        
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+
+        .error-banner.show {
+            display: block;
         }
-        
-        .progress-fill.warning { background: var(--accent-warning); }
-        .progress-fill.critical { background: var(--accent-critical); }
-        
-        /* Stats grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .stat-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-family: var(--font-display);
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 4px;
-            background: linear-gradient(135deg, var(--accent-success) 0%, var(--accent-info) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        /* Alert */
-        .alert {
-            background: rgba(255, 170, 0, 0.1);
-            border: 1px solid rgba(255, 170, 0, 0.3);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert.critical {
-            background: rgba(255, 51, 102, 0.1);
-            border-color: rgba(255, 51, 102, 0.3);
-        }
-        
-        .alert-icon {
-            font-size: 20px;
-        }
-        
-        .alert-content {
-            flex: 1;
-        }
-        
-        .alert-title {
-            font-weight: 600;
-            font-size: 13px;
-            margin-bottom: 2px;
-        }
-        
-        .alert-message {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        
-        /* Footer */
+
         footer {
-            margin-top: 32px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-subtle);
             text-align: center;
-            font-size: 12px;
-            color: var(--text-dim);
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
         }
-        
-        .refresh-countdown {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            margin-top: 12px;
-        }
-        
-        /* Loading state */
+
         .loading {
             text-align: center;
-            padding: 40px 20px;
+            padding: 2rem;
+            color: var(--text-muted);
         }
-        
+
         .spinner {
+            border: 3px solid var(--surface-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
             width: 40px;
             height: 40px;
-            margin: 0 auto 16px;
-            border: 3px solid var(--border-subtle);
-            border-top-color: var(--accent-success);
-            border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
         }
-        
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        /* Section title */
-        .section-title {
-            font-family: var(--font-display);
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            margin: 32px 0 16px;
-            padding-left: 12px;
-            border-left: 3px solid var(--accent-success);
-        }
-        
-        /* Uptime chart */
-        .uptime-chart {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            height: 80px;
-            gap: 4px;
-            margin-top: 16px;
-        }
-        
-        .uptime-bar {
-            flex: 1;
-            background: var(--bg-secondary);
-            border-radius: 4px 4px 0 0;
-            position: relative;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .uptime-bar:hover {
-            background: var(--accent-success);
-        }
-        
-        .uptime-label {
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: var(--text-dim);
-        }
-        
-        /* Responsive */
-        @media (max-width: 480px) {
-            .container {
-                padding: 16px;
-            }
-            
-            h1 {
-                font-size: 24px;
-            }
-            
-            .stats-grid {
+
+        @media (max-width: 768px) {
+            .grid {
                 grid-template-columns: 1fr;
             }
-        }
-        
-        /* PWA install prompt */
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-card);
-            border: 1px solid var(--border-strong);
-            border-radius: 12px;
-            padding: 16px 24px;
-            box-shadow: var(--shadow-md);
-            z-index: 1000;
-            display: none;
-            animation: slideUp 0.3s ease;
-        }
-        
-        @keyframes slideUp {
-            from {
-                transform: translateX(-50%) translateY(100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(-50%) translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .install-prompt button {
-            background: var(--accent-success);
-            color: var(--bg-primary);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🏥 Infraestrutura N8N</h1>
-            <div class="last-update">
-                <span class="status-pulse"></span>
-                <span id="lastUpdate">Carregando...</span>
+            <h1>ðŸ¥ Infraestrutura N8N</h1>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span id="statusText">Carregando...</span>
             </div>
         </header>
-        
-        <div id="content">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>Carregando métricas...</p>
+
+        <div class="error-banner" id="errorBanner">
+            âŒ <strong>Erro ao carregar dados</strong><br>
+            Verifique se o workflow N8N estÃ¡ rodando e se a URL do Gist estÃ¡ correta.
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <p>Carregando dados...</p>
+        </div>
+
+        <div id="dashboardContent" style="display: none;">
+            <!-- System Resources -->
+            <div class="card">
+                <h2>ðŸ’» Recursos do Sistema</h2>
+                <div class="stat">
+                    <span class="stat-label">Hostname</span>
+                    <span class="stat-value" id="hostname">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Uptime</span>
+                    <span class="stat-value" id="uptime">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">CPU</span>
+                    <span class="stat-value" id="cpu">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">MemÃ³ria</span>
+                    <span class="stat-value" id="memory">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Disco</span>
+                    <span class="stat-value" id="disk">-</span>
+                </div>
+            </div>
+
+            <!-- Containers -->
+            <div class="card">
+                <h2>ðŸ³ Containers Docker</h2>
+                <div id="containersList"></div>
+            </div>
+
+            <!-- Workflows -->
+            <div class="card">
+                <h2>âš¡ Workflows N8N</h2>
+                <div class="stat">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value" id="workflowsTotal">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Ativos</span>
+                    <span class="stat-value" id="workflowsActive">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">ExecuÃ§Ãµes (24h)</span>
+                    <span class="stat-value" id="executions24h">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Taxa de Sucesso</span>
+                    <span class="stat-value" id="successRate">-</span>
+                </div>
+            </div>
+
+            <!-- Backups -->
+            <div class="card">
+                <h2>ðŸ’¾ Backups</h2>
+                <div class="stat">
+                    <span class="stat-label">Ãšltimo DiÃ¡rio</span>
+                    <span class="stat-value" id="lastDaily">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Ãšltimo Semanal</span>
+                    <span class="stat-value" id="lastWeekly">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">PrÃ³ximo DiÃ¡rio</span>
+                    <span class="stat-value" id="nextDaily">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">PrÃ³ximo Semanal</span>
+                    <span class="stat-value" id="nextWeekly">-</span>
+                </div>
             </div>
         </div>
-        
+
         <footer>
-            <div class="refresh-countdown">
-                🔄 Próxima atualização em <strong id="countdown">60</strong>s
-            </div>
-            <p style="margin-top: 16px;">Dashboard v1.0 • N8N Infrastructure Monitor</p>
+            ðŸ”„ PrÃ³xima atualizaÃ§Ã£o em <span id="countdown">60</span>s<br>
+            Dashboard v1.0 â€¢ N8N Infrastructure Monitor
         </footer>
-    </div>
-    
-    <div class="install-prompt" id="installPrompt">
-        <p>📱 Adicionar à tela inicial?</p>
-        <button id="installBtn">Instalar App</button>
     </div>
 
     <script>
-        // Configuration  
-        const GIST_URL = 'https://api.github.com/gists/6f8186d15f6e65b08c04642242607d6e';
-        const REFRESH_INTERVAL = 60000; // 60 seconds
-        
-        let refreshTimer;
+        // âš ï¸ IMPORTANTE: Substitua pelo ID do seu Gist
+        const GIST_ID = '6f8186d15f6e65b08c04642242607d6e';
+        const GIST_URL = `https://api.github.com/gists/${GIST_ID}`;
+        const UPDATE_INTERVAL = 60000; // 60 segundos
+
+        let countdown = 60;
+        let updateTimer;
         let countdownTimer;
-        let currentData = null;
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            startRefreshTimer();
-            setupPWA();
-        });
-        
-        // Load data from GitHub Gist
+
+        // Buscar dados do Gist via API
         async function loadData() {
             try {
-                const response = await fetch(GIST_URL + '?_=' + Date.now());
-                const data = await response.json();
-                currentData = data;
-                renderDashboard(data);
-                updateLastUpdateTime(data.timestamp);
+                console.log('Buscando dados do Gist...');
+                
+                const response = await fetch(GIST_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const gistData = await response.json();
+                console.log('Gist recebido:', gistData);
+                
+                // Extrair conteÃºdo do arquivo
+                const fileContent = gistData.files['dashboard-status.json'].content;
+                const data = JSON.parse(fileContent);
+                console.log('Dados parseados:', data);
+                
+                updateDashboard(data);
+                hideError();
+                showContent();
+                updateStatusText('Online');
+                
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('Erro ao carregar dados:', error);
                 showError();
+                updateStatusText('Erro');
             }
         }
-        
-        // Render dashboard
-        function renderDashboard(data) {
-            const content = document.getElementById('content');
-            
-            let html = '';
-            
-            // Overall status
-            const statusClass = data.system.status === 'healthy' ? 'healthy' : 
-                               data.system.status === 'warning' ? 'warning' : 'critical';
-            
-            html += `
-                <div class="status-card ${statusClass}">
-                    <div class="status-header">
-                        <div class="status-title">Status Geral</div>
-                        <div class="status-badge ${statusClass}">${getStatusIcon(data.system.status)} ${data.system.status.toUpperCase()}</div>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">${data.system.containers_running}/${data.system.containers_total}</div>
-                            <div class="stat-label">Containers</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${formatUptime(data.system.uptime_seconds)}</div>
-                            <div class="stat-label">Uptime</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Alerts
-            if (data.alerts && data.alerts.length > 0) {
-                html += '<div class="section-title">⚠️ Alertas</div>';
-                data.alerts.forEach(alert => {
-                    const alertClass = alert.level === 'critical' ? 'critical' : 'warning';
-                    html += `
-                        <div class="alert ${alertClass}">
-                            <div class="alert-icon">${alert.level === 'critical' ? '🔴' : '🟡'}</div>
-                            <div class="alert-content">
-                                <div class="alert-title">${alert.level.toUpperCase()}</div>
-                                <div class="alert-message">${alert.message}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
+
+        // Atualizar dashboard com os dados
+        function updateDashboard(data) {
+            // System
+            document.getElementById('hostname').textContent = data.system.hostname || '-';
+            document.getElementById('uptime').textContent = `${data.system.uptime_hours || 0}h`;
+            document.getElementById('cpu').textContent = `${data.system.cpu_percent || 0}%`;
+            document.getElementById('memory').textContent = `${data.system.memory_percent || 0}%`;
+            document.getElementById('disk').textContent = `${data.system.disk_percent || 0}%`;
+
             // Containers
-            html += '<div class="section-title">🐳 Containers</div>';
-            data.containers.forEach(container => {
-                const healthClass = container.health === 'healthy' ? 'healthy' : 
-                                   container.health === 'unhealthy' ? 'critical' : '';
-                
-                const memPercent = Math.round((container.memory_used_mb / container.memory_limit_mb) * 100);
-                const memClass = memPercent > 90 ? 'critical' : memPercent > 75 ? 'warning' : '';
-                
-                html += `
-                    <div class="container-item">
-                        <div class="container-header">
-                            <div class="container-name">${container.name}</div>
-                            <div class="status-badge ${healthClass}">${container.health || container.status}</div>
-                        </div>
-                        <div class="metric-grid">
-                            <div class="metric">
-                                <div class="metric-label">Memória</div>
-                                <div class="metric-value">${container.memory_used_mb}MB / ${container.memory_limit_mb}MB</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">CPU</div>
-                                <div class="metric-value">${container.cpu_percent}%</div>
-                            </div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill ${memClass}" style="width: ${memPercent}%"></div>
-                        </div>
-                        <div style="margin-top: 8px; font-size: 12px; color: var(--text-dim);">
-                            Uptime: ${container.uptime}
-                        </div>
-                    </div>
-                `;
-            });
+            const containersList = document.getElementById('containersList');
+            containersList.innerHTML = '';
             
-            // System Resources
-            html += '<div class="section-title">💻 Recursos do Sistema</div>';
-            
-            const ramPercent = Math.round((data.resources.ram_used_gb / data.resources.ram_total_gb) * 100);
-            const diskPercent = Math.round((data.resources.disk_used_gb / data.resources.disk_total_gb) * 100);
-            
-            html += `
-                <div class="container-item">
-                    <div class="metric-grid" style="grid-template-columns: 1fr;">
-                        <div class="metric">
-                            <div class="metric-label">💾 Memória</div>
-                            <div class="metric-value">${data.resources.ram_used_gb.toFixed(1)}GB / ${data.resources.ram_total_gb}GB</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill ${ramPercent > 90 ? 'critical' : ramPercent > 75 ? 'warning' : ''}" 
-                                     style="width: ${ramPercent}%"></div>
-                            </div>
-                        </div>
-                        <div class="metric" style="margin-top: 16px;">
-                            <div class="metric-label">💿 Disco</div>
-                            <div class="metric-value">${data.resources.disk_used_gb}GB / ${data.resources.disk_total_gb}GB</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill ${diskPercent > 90 ? 'critical' : diskPercent > 85 ? 'warning' : ''}" 
-                                     style="width: ${diskPercent}%"></div>
-                            </div>
-                        </div>
-                        <div class="metric" style="margin-top: 16px;">
-                            <div class="metric-label">🔥 CPU</div>
-                            <div class="metric-value">${data.resources.cpu_percent}%</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${data.resources.cpu_percent}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Backups
-            if (data.backups) {
-                html += '<div class="section-title">💾 Backups</div>';
-                html += `
-                    <div class="container-item">
-                        <div class="metric-grid">
-                            <div class="metric">
-                                <div class="metric-label">Último Diário</div>
-                                <div class="metric-value">${formatDate(data.backups.last_daily.timestamp)}</div>
-                                <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
-                                    ${data.backups.last_daily.size_kb}KB • ${data.backups.last_daily.validated ? '✅ Validado' : '⚠️ Não validado'}
-                                </div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">Último Semanal</div>
-                                <div class="metric-value">${formatDate(data.backups.last_weekly.timestamp)}</div>
-                                <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
-                                    ${data.backups.last_weekly.size_gb.toFixed(1)}GB
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric" style="margin-top: 16px;">
-                            <div class="metric-label">☁️ Dropbox</div>
-                            <div class="metric-value">${data.backups.dropbox_used_gb.toFixed(2)}GB / ${data.backups.dropbox_total_gb}GB</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${data.backups.dropbox_percent}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // N8N Workflows
-            if (data.n8n_workflows) {
-                html += '<div class="section-title">⚡ Workflows N8N</div>';
-                const successRate = data.n8n_workflows.executions_24h.success_rate;
-                html += `
-                    <div class="container-item">
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-value">${data.n8n_workflows.total}</div>
-                                <div class="stat-label">Total Workflows</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">${successRate.toFixed(1)}%</div>
-                                <div class="stat-label">Taxa Sucesso 24h</div>
-                            </div>
-                        </div>
-                        <div class="metric-grid" style="margin-top: 16px;">
-                            <div class="metric">
-                                <div class="metric-label">✅ Sucesso</div>
-                                <div class="metric-value">${data.n8n_workflows.executions_24h.success}</div>
-                            </div>
-                            <div class="metric">
-                                <div class="metric-label">❌ Erros</div>
-                                <div class="metric-value">${data.n8n_workflows.executions_24h.error}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Uptime History
-            if (data.uptime_7days) {
-                html += '<div class="section-title">📊 Histórico (7 dias)</div>';
-                html += '<div class="container-item">';
-                html += '<div class="uptime-chart">';
-                
-                const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
-                days.forEach(day => {
-                    const percent = data.uptime_7days[day] || 0;
-                    const height = Math.max(percent * 0.8, 10); // min 10px
-                    html += `
-                        <div class="uptime-bar" style="height: ${height}%" title="${day.toUpperCase()}: ${percent}%">
-                            <div class="uptime-label">${day}</div>
+            if (data.containers && data.containers.length > 0) {
+                data.containers.forEach(container => {
+                    const item = document.createElement('div');
+                    item.className = 'container-item';
+                    
+                    const statusClass = container.health === 'healthy' ? 'status-healthy' : 
+                                       container.status === 'running' ? 'status-running' : 
+                                       'status-unhealthy';
+                    
+                    item.innerHTML = `
+                        <div class="container-name">${container.name}</div>
+                        <div class="container-status">
+                            <span class="status-icon ${statusClass}"></span>
+                            <span>${container.health || container.status}</span>
                         </div>
                     `;
+                    containersList.appendChild(item);
                 });
-                
-                html += '</div>';
-                html += `<div style="text-align: center; margin-top: 32px; font-size: 12px; color: var(--text-dim);">
-                    Média: ${data.uptime_7days.average.toFixed(1)}% uptime
-                </div>`;
-                html += '</div>';
             }
-            
-            content.innerHTML = html;
+
+            // Workflows
+            document.getElementById('workflowsTotal').textContent = data.workflows.total || 0;
+            document.getElementById('workflowsActive').textContent = data.workflows.active || 0;
+            document.getElementById('executions24h').textContent = data.workflows.executions_24h || 0;
+            document.getElementById('successRate').textContent = `${data.workflows.success_rate || 0}%`;
+
+            // Backups
+            document.getElementById('lastDaily').textContent = data.backups.last_daily || '-';
+            document.getElementById('lastWeekly').textContent = data.backups.last_weekly || '-';
+            document.getElementById('nextDaily').textContent = data.backups.next_daily || '-';
+            document.getElementById('nextWeekly').textContent = data.backups.next_weekly || '-';
         }
-        
-        // Helper functions
-        function getStatusIcon(status) {
-            const icons = {
-                'healthy': '🟢',
-                'warning': '🟡',
-                'critical': '🔴'
-            };
-            return icons[status] || '⚪';
-        }
-        
-        function formatUptime(seconds) {
-            const days = Math.floor(seconds / 86400);
-            const hours = Math.floor((seconds % 86400) / 3600);
-            if (days > 0) {
-                return `${days}d ${hours}h`;
-            }
-            return `${hours}h`;
-        }
-        
-        function formatDate(timestamp) {
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diff = now - date;
-            
-            if (diff < 3600000) { // < 1 hour
-                return Math.floor(diff / 60000) + ' min atrás';
-            } else if (diff < 86400000) { // < 1 day
-                return Math.floor(diff / 3600000) + 'h atrás';
-            } else {
-                const day = date.getDate().toString().padStart(2, '0');
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                return `${day}/${month}`;
-            }
-        }
-        
-        function updateLastUpdateTime(timestamp) {
-            const date = new Date(timestamp);
-            const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('lastUpdate').textContent = `Atualizado às ${time}`;
-        }
-        
+
+        // UI Helpers
         function showError() {
-            const content = document.getElementById('content');
-            content.innerHTML = `
-                <div class="alert critical">
-                    <div class="alert-icon">❌</div>
-                    <div class="alert-content">
-                        <div class="alert-title">Erro ao carregar dados</div>
-                        <div class="alert-message">Verifique se o workflow N8N está rodando e se a URL do Gist está correta.</div>
-                    </div>
-                </div>
-            `;
+            document.getElementById('errorBanner').classList.add('show');
         }
-        
-        // Refresh timer
-        function startRefreshTimer() {
-            let countdown = 60;
+
+        function hideError() {
+            document.getElementById('errorBanner').classList.remove('show');
+        }
+
+        function showContent() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+        }
+
+        function updateStatusText(status) {
+            document.getElementById('statusText').textContent = status;
+        }
+
+        function updateCountdown() {
+            document.getElementById('countdown').textContent = countdown;
+            countdown--;
             
-            countdownTimer = setInterval(() => {
-                countdown--;
-                document.getElementById('countdown').textContent = countdown;
-                
-                if (countdown <= 0) {
-                    countdown = 60;
-                }
-            }, 1000);
-            
-            refreshTimer = setInterval(() => {
+            if (countdown < 0) {
+                countdown = 60;
                 loadData();
-            }, REFRESH_INTERVAL);
-        }
-        
-        // PWA support
-        let deferredPrompt;
-        
-        function setupPWA() {
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                document.getElementById('installPrompt').style.display = 'block';
-            });
-            
-            document.getElementById('installBtn').addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    deferredPrompt = null;
-                    document.getElementById('installPrompt').style.display = 'none';
-                }
-            });
-        }
-        
-        // Visibility change (pause refresh when tab is hidden)
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                clearInterval(refreshTimer);
-                clearInterval(countdownTimer);
-            } else {
-                loadData();
-                startRefreshTimer();
             }
+        }
+
+        // Inicializar
+        function init() {
+            console.log('Iniciando dashboard...');
+            loadData();
+            
+            // Atualizar a cada minuto
+            updateTimer = setInterval(loadData, UPDATE_INTERVAL);
+            
+            // Countdown a cada segundo
+            countdownTimer = setInterval(updateCountdown, 1000);
+        }
+
+        // Cleanup ao sair
+        window.addEventListener('beforeunload', () => {
+            clearInterval(updateTimer);
+            clearInterval(countdownTimer);
         });
+
+        // Iniciar quando a pÃ¡gina carregar
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
