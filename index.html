@@ -52,6 +52,14 @@
             margin-bottom: 0.5rem;
         }
 
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -68,6 +76,15 @@
             border-radius: 50%;
             background: var(--success);
             animation: pulse 2s infinite;
+        }
+
+        .status-dot.warning { background: var(--warning); }
+        .status-dot.critical { background: var(--danger); }
+
+        .last-update {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 0.5rem;
         }
 
         @keyframes pulse {
@@ -109,7 +126,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* CARDS GRID */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -117,7 +133,6 @@
             margin-bottom: 1.5rem;
         }
 
-        /* RESOURCE CARD */
         .resource-card {
             background: var(--surface);
             border-radius: 1rem;
@@ -195,7 +210,6 @@
             transform: rotate(180deg);
         }
 
-        /* DETAILS */
         .card-details {
             max-height: 0;
             overflow: hidden;
@@ -237,8 +251,6 @@
         }
 
         .detail-label {
-            color: var(--text);
-            font-size: 0.875rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -246,10 +258,6 @@
 
         .detail-value {
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
         }
 
         .item-status {
@@ -261,44 +269,71 @@
         .item-status.green { background: var(--success); }
         .item-status.yellow { background: var(--warning); }
         .item-status.red { background: var(--danger); }
-        .item-status.gray { background: var(--text-muted); opacity: 0.5; }
 
-        .metric-value {
-            padding: 0.25rem 0.5rem;
+        .metric-value.good { color: var(--success); }
+        .metric-value.warning { color: var(--warning); }
+        .metric-value.critical { color: var(--danger); }
+
+        .alerts-section {
             background: var(--surface);
-            border-radius: 0.25rem;
-            font-family: 'Courier New', monospace;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .metric-value.critical {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
+        .alerts-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
         }
 
-        .metric-value.warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--surface-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--warning);
         }
 
-        .metric-value.good {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
+        .alert-item.critical {
+            border-left-color: var(--danger);
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+        }
+
+        .no-alerts {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 1rem;
         }
 
         footer {
             text-align: center;
-            padding: 1.5rem;
+            padding: 1rem;
             color: var(--text-muted);
-            font-size: 0.875rem;
+            font-size: 0.75rem;
         }
 
-        @media (max-width: 768px) {
-            .cards-grid {
-                grid-template-columns: 1fr;
+        @media (max-width: 640px) {
+            body {
+                padding: 0.5rem;
             }
             
-            .resource-card.expanded {
-                grid-column: auto;
+            header {
+                padding: 1rem;
+            }
+            
+            header h1 {
+                font-size: 1.25rem;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -307,44 +342,43 @@
     <div class="container">
         <header>
             <h1>Infraestrutura N8N</h1>
-            <div class="status-badge">
-                <span class="status-dot"></span>
-                <span id="statusText">Carregando...</span>
+            <div class="header-info">
+                <div class="status-badge">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Carregando...</span>
+                </div>
+                <div class="status-badge">
+                    Atualiza em <span id="countdown">60</span>s
+                </div>
             </div>
+            <div class="last-update" id="lastUpdate"></div>
         </header>
 
         <div class="error-banner" id="errorBanner">
-            <strong>Erro ao carregar dados</strong><br>
-            Verifique se o workflow N8N esta rodando e se a URL do Gist esta correta.
+            <strong>Erro de conexao</strong>
+            <p>Nao foi possivel carregar os dados. Tentando novamente...</p>
         </div>
 
-        <div id="loadingState" class="loading">
+        <div class="loading" id="loadingState">
             <div class="spinner"></div>
             <p>Carregando dados...</p>
         </div>
 
-        <div id="dashboardContent" style="display: none;">
-            <div class="cards-grid" id="cardsGrid">
-                <!-- Cards gerados dinamicamente -->
-            </div>
-        </div>
+        <div id="alertsContainer"></div>
+
+        <div class="cards-grid" id="cardsGrid" style="display: none;"></div>
 
         <footer>
-            Proxima atualizacao em <span id="countdown">60</span>s<br>
-            Dashboard v3.0 - N8N Infrastructure Monitor
+            Dashboard V4.2-PG | Atualizado via PostgreSQL | Schema: <span id="schemaVersion">-</span>
         </footer>
     </div>
 
     <script>
-        const GIST_ID = '6f8186d15f6e65b08c04642242607d6e';
-        const GIST_URL = 'https://api.github.com/gists/' + GIST_ID;
+        const GIST_URL = 'https://api.github.com/gists/6f8186d15f6e65b08c04642242607d6e';
         const UPDATE_INTERVAL = 60000;
-
         let countdown = 60;
-        let updateTimer;
-        let countdownTimer;
+        let updateTimer, countdownTimer;
 
-        // Buscar dados
         async function loadData() {
             try {
                 const response = await fetch(GIST_URL);
@@ -357,21 +391,54 @@
                 updateDashboard(data);
                 hideError();
                 showContent();
-                updateStatusText('Online');
+                
+                // Atualizar status baseado nos dados
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
+                if (data.system.status === 'healthy') {
+                    statusDot.className = 'status-dot';
+                    statusText.textContent = 'Operacional';
+                } else if (data.system.status === 'warning') {
+                    statusDot.className = 'status-dot warning';
+                    statusText.textContent = 'Atencao';
+                } else {
+                    statusDot.className = 'status-dot critical';
+                    statusText.textContent = 'Critico';
+                }
+                
+                // Mostrar ultima atualizacao
+                if (data.timestamp) {
+                    const date = new Date(data.timestamp);
+                    document.getElementById('lastUpdate').textContent = 
+                        'Ultima atualizacao: ' + date.toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'});
+                }
+                
+                // Mostrar schema
+                document.getElementById('schemaVersion').textContent = data.schema || '-';
+                
             } catch (error) {
                 console.error('Erro:', error);
                 showError();
-                updateStatusText('Erro');
+                document.getElementById('statusText').textContent = 'Erro';
             }
         }
 
-        // Atualizar dashboard
         function updateDashboard(data) {
             const grid = document.getElementById('cardsGrid');
             grid.innerHTML = '';
 
+            // Mapear dados - O workflow envia resources separado de system
+            const resources = data.resources || {};
+            const system = data.system || {};
+            
             // 1. RECURSOS DO SISTEMA
-            const systemHealth = analyzeSystemHealth(data.system);
+            const cpuPercent = resources.cpu_percent || 0;
+            const memoryPercent = resources.ram_percent || 0;
+            const diskPercent = resources.disk_percent || 0;
+            const hostname = data.data_timestamp ? 'N8N_MATRIZ' : 'Desconhecido';
+            
+            const systemHealth = analyzeSystemHealth(cpuPercent, memoryPercent, diskPercent);
             grid.appendChild(createResourceCard(
                 'system',
                 'Recursos do Sistema',
@@ -383,36 +450,37 @@
                         items: [
                             { 
                                 label: 'CPU', 
-                                value: data.system.cpu_percent + '%',
-                                status: getMetricStatus(data.system.cpu_percent, 70, 90),
-                                valueClass: getMetricClass(data.system.cpu_percent, 70, 90)
+                                value: cpuPercent + '%',
+                                status: getMetricStatus(cpuPercent, 70, 90),
+                                valueClass: getMetricClass(cpuPercent, 70, 90)
                             },
                             { 
                                 label: 'Memoria', 
-                                value: data.system.memory_percent + '%',
-                                status: getMetricStatus(data.system.memory_percent, 70, 90),
-                                valueClass: getMetricClass(data.system.memory_percent, 70, 90)
+                                value: memoryPercent + '%',
+                                status: getMetricStatus(memoryPercent, 70, 90),
+                                valueClass: getMetricClass(memoryPercent, 70, 90)
                             },
                             { 
                                 label: 'Disco', 
-                                value: data.system.disk_percent + '%',
-                                status: getMetricStatus(data.system.disk_percent, 70, 90),
-                                valueClass: getMetricClass(data.system.disk_percent, 70, 90)
+                                value: diskPercent + '%',
+                                status: getMetricStatus(diskPercent, 70, 90),
+                                valueClass: getMetricClass(diskPercent, 70, 90)
                             }
                         ]
                     },
                     {
                         title: 'Informacoes',
                         items: [
-                            { label: 'Hostname', value: data.system.hostname },
-                            { label: 'Uptime', value: data.system.uptime_hours + ' horas' }
+                            { label: 'RAM Usada', value: (resources.ram_used_gb || 0) + ' / ' + (resources.ram_total_gb || 0) + ' GB' },
+                            { label: 'Disco Usado', value: (resources.disk_used_gb || 0) + ' / ' + (resources.disk_total_gb || 0) + ' GB' }
                         ]
                     }
                 ]
             ));
 
             // 2. CONTAINERS DOCKER
-            const containersHealth = analyzeContainersHealth(data.containers);
+            const containers = data.containers || [];
+            const containersHealth = analyzeContainersHealth(containers);
             grid.appendChild(createResourceCard(
                 'containers',
                 'Containers Docker',
@@ -421,61 +489,59 @@
                 [
                     {
                         title: 'Status dos Containers',
-                        items: data.containers.map(c => ({
+                        items: containers.map(c => ({
                             label: c.name,
                             value: c.health || c.status,
                             status: c.health === 'healthy' ? 'green' : c.status === 'running' ? 'yellow' : 'red',
-                            extra: c.memory_mb ? c.memory_mb + ' MB' : ''
+                            extra: c.uptime ? c.uptime : ''
                         }))
                     }
                 ]
             ));
 
             // 3. WORKFLOWS N8N
-            const workflowsHealth = analyzeWorkflowsHealth(
-                data.workflows_list || [],  // Lista completa de workflows
-                data.executions || []        // Array de execuções
-            );
-            // Separar workflows ativos e inativos
-            const activeWorkflows = workflowsHealth.workflows.filter(w => w.active);
-            const inactiveWorkflows = workflowsHealth.workflows.filter(w => !w.active);
-            
-            const workflowSections = [];
-            
-            // Seção de workflows ativos
-            if (activeWorkflows.length > 0) {
-                workflowSections.push({
-                    title: 'Workflows Ativos',
-                    items: activeWorkflows.map(w => ({
-                        label: w.name,
-                        value: w.reason,
-                        status: w.status === 'red' ? 'red' : 
-                               w.status === 'yellow' ? 'yellow' : 'green'
-                    }))
-                });
-            }
-            
-            // Seção de workflows inativos (se houver)
-            if (inactiveWorkflows.length > 0 && inactiveWorkflows.length <= 5) {
-                workflowSections.push({
-                    title: 'Workflows Inativos',
-                    items: inactiveWorkflows.map(w => ({
-                        label: w.name,
-                        value: 'Inativo'
-                    }))
-                });
-            }
-            
+            const n8nWorkflows = data.n8n_workflows || {};
+            const workflowsHealth = analyzeN8NWorkflows(n8nWorkflows);
             grid.appendChild(createResourceCard(
                 'workflows',
                 'Workflows N8N',
                 workflowsHealth.status,
                 workflowsHealth.summary,
-                workflowSections
+                [
+                    {
+                        title: 'Estatisticas',
+                        items: [
+                            { label: 'Total', value: n8nWorkflows.total || 0 },
+                            { label: 'Ativos', value: n8nWorkflows.active || 0, status: 'green' },
+                            { label: 'Inativos', value: n8nWorkflows.inactive || 0 }
+                        ]
+                    },
+                    {
+                        title: 'Execucoes (24h)',
+                        items: [
+                            { 
+                                label: 'Sucesso', 
+                                value: (n8nWorkflows.executions_24h?.success || 0),
+                                status: 'green'
+                            },
+                            { 
+                                label: 'Erro', 
+                                value: (n8nWorkflows.executions_24h?.error || 0),
+                                status: (n8nWorkflows.executions_24h?.error || 0) > 0 ? 'red' : 'green'
+                            },
+                            { 
+                                label: 'Taxa de Sucesso', 
+                                value: (n8nWorkflows.executions_24h?.success_rate || 100) + '%',
+                                status: getMetricStatus(100 - (n8nWorkflows.executions_24h?.success_rate || 100), 10, 30)
+                            }
+                        ]
+                    }
+                ]
             ));
 
             // 4. BACKUPS
-            const backupsHealth = analyzeBackupsHealth(data.backups);
+            const backups = data.backups || {};
+            const backupsHealth = analyzeBackupsHealth(backups);
             grid.appendChild(createResourceCard(
                 'backups',
                 'Backups',
@@ -485,33 +551,76 @@
                     {
                         title: 'Backups Recentes',
                         items: [
-                            { label: 'Ultimo Diario', value: data.backups.last_daily },
-                            { label: 'Ultimo Semanal', value: data.backups.last_weekly }
+                            { 
+                                label: 'Ultimo Diario', 
+                                value: backups.last_daily ? formatDate(backups.last_daily) : 'Nunca'
+                            },
+                            { 
+                                label: 'Ultimo Semanal', 
+                                value: backups.last_weekly ? formatDate(backups.last_weekly) : 'Nunca'
+                            }
                         ]
                     },
                     {
-                        title: 'Proximos Agendados',
+                        title: 'Armazenamento',
                         items: [
-                            { label: 'Proximo Diario', value: data.backups.next_daily },
-                            { label: 'Proximo Semanal', value: data.backups.next_weekly }
+                            { label: 'Dropbox Usado', value: (backups.dropbox_used_gb || 0) + ' GB' }
                         ]
                     }
                 ]
             ));
+
+            // 5. ALERTAS
+            renderAlerts(data.alerts || []);
         }
 
-        // ANALISAR SAÚDE DO SISTEMA
-        function analyzeSystemHealth(system) {
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alertsContainer');
+            
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const alertsHtml = alerts.map(alert => {
+                const isCritical = alert.level === 'critical';
+                return `
+                    <div class="alert-item ${isCritical ? 'critical' : ''}">
+                        <span class="alert-icon">${isCritical ? '🔴' : '🟡'}</span>
+                        <span>${alert.message}</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="alerts-section">
+                    <div class="alerts-title">⚠️ Alertas Ativos (${alerts.length})</div>
+                    ${alertsHtml}
+                </div>
+            `;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'});
+            } catch {
+                return dateStr;
+            }
+        }
+
+        function analyzeSystemHealth(cpu, memory, disk) {
             const issues = [];
             
-            if (system.cpu_percent >= 90) issues.push('CPU critica');
-            else if (system.cpu_percent >= 70) issues.push('CPU elevada');
+            if (cpu >= 90) issues.push('CPU critica');
+            else if (cpu >= 70) issues.push('CPU elevada');
             
-            if (system.memory_percent >= 90) issues.push('Memoria critica');
-            else if (system.memory_percent >= 70) issues.push('Memoria elevada');
+            if (memory >= 90) issues.push('Memoria critica');
+            else if (memory >= 70) issues.push('Memoria elevada');
             
-            if (system.disk_percent >= 90) issues.push('Disco critico');
-            else if (system.disk_percent >= 70) issues.push('Disco elevado');
+            if (disk >= 90) issues.push('Disco critico');
+            else if (disk >= 70) issues.push('Disco elevado');
 
             if (issues.length === 0) {
                 return { status: 'green', summary: 'Todos recursos operando normalmente' };
@@ -522,19 +631,16 @@
             }
         }
 
-        // ANALISAR SAÚDE DOS CONTAINERS
         function analyzeContainersHealth(containers) {
-            // Containers que NAO precisam de healthcheck (considerados OK mesmo "running")
             const noHealthcheckNeeded = ['autoheal', 'portainer'];
             
-            // Containers com problema REAL
             const unhealthy = containers.filter(c => 
                 c.health === 'unhealthy' || 
                 c.status === 'exited' || 
-                c.status === 'restarting'
+                c.status === 'restarting' ||
+                c.status === 'stopped'
             );
             
-            // Containers saudaveis (healthy OU running sem precisar de healthcheck)
             const healthy = containers.filter(c => 
                 c.health === 'healthy' || 
                 (c.status === 'running' && noHealthcheckNeeded.includes(c.name))
@@ -552,127 +658,50 @@
                     summary: containers.length + ' containers operacionais' 
                 };
             } else {
-                // Containers running mas que DEVERIAM ter healthcheck
-                const noHealthcheck = containers.length - healthy.length - unhealthy.length;
                 return { 
                     status: 'yellow', 
-                    summary: 'ATENCAO: ' + noHealthcheck + ' container(s) sem healthcheck' 
+                    summary: 'ATENCAO: Alguns containers sem healthcheck' 
                 };
             }
         }
 
-        // ANALISAR SAÚDE DOS WORKFLOWS
-        function analyzeWorkflowsHealth(workflows, executionsData) {
-            const executions = executionsData || [];
-            const now = new Date();
-            
-            // Analisar cada workflow individualmente
-            const workflowsStatus = workflows.map(w => {
-                // Pegar execuções deste workflow
-                const workflowExecs = executions
-                    .filter(e => e.workflowId === w.id)
-                    .sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt));
-                
-                // Verificar se está travado (rodando > 30 min)
-                const stuck = workflowExecs.find(e => {
-                    if (e.status !== 'running') return false;
-                    const started = new Date(e.startedAt);
-                    const runningMinutes = (now - started) / 1000 / 60;
-                    return runningMinutes > 30;
-                });
-                
-                // Pegar últimas 5 execuções finalizadas
-                const last5 = workflowExecs
-                    .filter(e => e.status !== 'running' && e.status !== 'waiting')
-                    .slice(0, 5);
-                
-                const last5Failed = last5.filter(e => 
-                    e.status === 'error' || e.status === 'crashed'
-                ).length;
-                
-                // Determinar status do workflow
-                let status = 'green';
-                let reason = 'OK';
-                
-                if (!w.active) {
-                    status = 'gray';
-                    reason = 'Inativo';
-                } else if (stuck) {
-                    status = 'red';
-                    reason = 'Travado';
-                } else if (last5.length === 0) {
-                    status = 'green';
-                    reason = 'Sem execucoes';
-                } else if (last5.length >= 5 && last5Failed === 5) {
-                    status = 'red';
-                    reason = 'Ultimas 5 falharam';
-                } else if (last5.length >= 3 && last5Failed >= 3) {
-                    status = 'red';
-                    reason = last5Failed + '/5 falharam';
-                } else if (last5Failed > 0) {
-                    status = 'yellow';
-                    reason = last5Failed + '/5 com falha';
-                } else {
-                    status = 'green';
-                    reason = 'OK';
-                }
-                
-                return {
-                    id: w.id,
-                    name: w.name,
-                    active: w.active,
-                    status: status,
-                    reason: reason,
-                    lastExecution: last5[0] ? last5[0].startedAt : null
-                };
-            });
-            
-            // Contar por status
-            const activeWorkflows = workflowsStatus.filter(w => w.active);
-            const healthyActive = activeWorkflows.filter(w => w.status === 'green').length;
-            const stuckActive = activeWorkflows.filter(w => w.status === 'red' && w.reason === 'Travado').length;
-            const failingActive = activeWorkflows.filter(w => w.status === 'red' && w.reason !== 'Travado').length;
-            const warningActive = activeWorkflows.filter(w => w.status === 'yellow').length;
-            
-            // Determinar status geral
-            let overallStatus = 'green';
-            let summary = '';
-            
-            if (stuckActive > 0) {
-                overallStatus = 'red';
-                summary = 'CRITICO: ' + stuckActive + ' workflow(s) travado(s)';
-            } else if (failingActive > 0) {
-                overallStatus = 'red';
-                summary = 'CRITICO: ' + failingActive + ' workflow(s) falhando';
-            } else if (warningActive > 0) {
-                overallStatus = 'yellow';
-                summary = 'ATENCAO: ' + warningActive + ' workflow(s) com falhas';
-            } else if (activeWorkflows.length === 0) {
-                overallStatus = 'yellow';
-                summary = 'Nenhum workflow ativo';
+        function analyzeN8NWorkflows(workflows) {
+            const active = workflows.active || 0;
+            const errorRate = 100 - (workflows.executions_24h?.success_rate || 100);
+            const errors = workflows.executions_24h?.error || 0;
+
+            if (errors > 10) {
+                return { status: 'red', summary: 'CRITICO: ' + errors + ' erros nas ultimas 24h' };
+            } else if (errorRate > 20) {
+                return { status: 'yellow', summary: 'ATENCAO: Taxa de erro ' + errorRate.toFixed(1) + '%' };
+            } else if (active === 0) {
+                return { status: 'yellow', summary: 'Nenhum workflow ativo' };
             } else {
-                overallStatus = 'green';
-                summary = healthyActive + '/' + activeWorkflows.length + ' ativos saudaveis';
+                return { status: 'green', summary: active + ' workflows ativos' };
+            }
+        }
+
+        function analyzeBackupsHealth(backups) {
+            if (!backups.last_daily) {
+                return { status: 'yellow', summary: 'Nenhum backup diario registrado' };
             }
             
-            return {
-                status: overallStatus,
-                summary: summary,
-                workflows: workflowsStatus
-            };
+            try {
+                const lastBackup = new Date(backups.last_daily);
+                const hoursSince = (Date.now() - lastBackup.getTime()) / 1000 / 60 / 60;
+                
+                if (hoursSince > 48) {
+                    return { status: 'red', summary: 'CRITICO: Backup atrasado ' + Math.floor(hoursSince) + 'h' };
+                } else if (hoursSince > 26) {
+                    return { status: 'yellow', summary: 'ATENCAO: Ultimo backup ha ' + Math.floor(hoursSince) + 'h' };
+                } else {
+                    return { status: 'green', summary: 'Backup em dia' };
+                }
+            } catch {
+                return { status: 'yellow', summary: 'Data do backup invalida' };
+            }
         }
 
-        // ANALISAR SAÚDE DOS BACKUPS
-        function analyzeBackupsHealth(backups) {
-            // TODO: Implementar lógica real quando tiver timestamp dos backups
-            // Por enquanto, sempre verde
-            return { 
-                status: 'green', 
-                summary: 'Sistema de backup operacional' 
-            };
-        }
-
-        // Criar card de recurso
         function createResourceCard(id, title, health, summary, sections) {
             const card = document.createElement('div');
             card.className = 'resource-card';
@@ -712,14 +741,12 @@
             return card;
         }
 
-        // Toggle card
         function toggleCard(card) {
             const wasExpanded = card.classList.contains('expanded');
             document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('expanded'));
             if (!wasExpanded) card.classList.add('expanded');
         }
 
-        // Helpers
         function getMetricStatus(value, yellowThreshold, redThreshold) {
             if (value >= redThreshold) return 'red';
             if (value >= yellowThreshold) return 'yellow';
@@ -742,11 +769,7 @@
 
         function showContent() {
             document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('dashboardContent').style.display = 'block';
-        }
-
-        function updateStatusText(status) {
-            document.getElementById('statusText').textContent = status;
+            document.getElementById('cardsGrid').style.display = 'grid';
         }
 
         function updateCountdown() {
