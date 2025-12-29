@@ -3,338 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infraestrutura N8N - Dashboard</title>
-    <meta name="description" content="Dashboard de monitoramento em tempo real da infraestrutura N8N">
-    <meta name="theme-color" content="#6366f1">
+    <title>N8N Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #6366f1;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
             --bg: #0f172a;
-            --surface: #1e293b;
-            --surface-light: #334155;
+            --card: #1e293b;
             --text: #f1f5f9;
-            --text-muted: #94a3b8;
+            --muted: #94a3b8;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --blue: #6366f1;
         }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg);
             color: var(--text);
-            line-height: 1.6;
             padding: 1rem;
+            min-height: 100vh;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* HEADER */
         header {
-            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+            background: linear-gradient(135deg, var(--blue), #4f46e5);
             padding: 1.5rem;
             border-radius: 1rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
         }
-
-        header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .header-info {
+        header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 0.5rem;
         }
-
         .status-badge {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
             padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.1);
             border-radius: 0.5rem;
             font-size: 0.875rem;
         }
-
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: var(--success);
             animation: pulse 2s infinite;
         }
-
-        .status-dot.warning { background: var(--warning); }
-        .status-dot.critical { background: var(--danger); }
-
-        .last-update {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 0.5rem;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .error-banner {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--danger);
+        .status-dot.healthy { background: var(--green); }
+        .status-dot.warning { background: var(--yellow); }
+        .status-dot.critical { background: var(--red); }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        .last-update { font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 0.5rem; }
+        
+        /* ALERTAS */
+        .alerts {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid var(--red);
             border-radius: 0.5rem;
             padding: 1rem;
             margin-bottom: 1rem;
-            display: none;
         }
-
-        .error-banner.show {
-            display: block;
+        .alerts.hidden { display: none; }
+        .alerts h3 { font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--red); }
+        .alert-item {
+            font-size: 0.875rem;
+            padding: 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-muted);
-        }
-
-        .spinner {
-            border: 3px solid var(--surface-light);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .resource-card {
-            background: var(--surface);
+        .alert-icon { font-size: 1rem; }
+        
+        /* CARDS */
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+        .card {
+            background: var(--card);
             border-radius: 1rem;
             padding: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border: 2px solid transparent;
         }
-
-        .resource-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-color: var(--primary);
-        }
-
-        .resource-card.expanded {
-            grid-column: 1 / -1;
-            border-color: var(--primary);
-        }
-
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
         }
-
-        .card-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-
-        .health-indicator {
-            width: 16px;
-            height: 16px;
+        .card-title { font-size: 1rem; font-weight: 600; }
+        .card-indicator {
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 8px currentColor;
         }
-
-        .health-indicator.green { 
-            background: var(--success);
-            color: var(--success);
-        }
-        .health-indicator.yellow { 
-            background: var(--warning);
-            color: var(--warning);
-        }
-        .health-indicator.red { 
-            background: var(--danger);
-            color: var(--danger);
-        }
-
-        .card-summary {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            margin-bottom: 0.75rem;
-        }
-
-        .expand-hint {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+        .card-indicator.green { background: var(--green); }
+        .card-indicator.yellow { background: var(--yellow); }
+        .card-indicator.red { background: var(--red); }
+        
+        /* METRICAS */
+        .metric {
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
-        .expand-icon {
-            transition: transform 0.3s ease;
-            font-size: 0.875rem;
-        }
-
-        .resource-card.expanded .expand-icon {
-            transform: rotate(180deg);
-        }
-
-        .card-details {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-        }
-
-        .resource-card.expanded .card-details {
-            max-height: 2000px;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--surface-light);
-        }
-
-        .detail-section {
-            margin-bottom: 1rem;
-        }
-
-        .detail-section-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .detail-item {
+        .metric:last-child { border-bottom: none; }
+        .metric-label { color: var(--muted); font-size: 0.875rem; }
+        .metric-value { font-weight: 600; }
+        .metric-value.good { color: var(--green); }
+        .metric-value.warn { color: var(--yellow); }
+        .metric-value.bad { color: var(--red); }
+        
+        /* CONTAINERS */
+        .container-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem;
-            background: var(--surface-light);
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
-        .detail-item:last-child {
-            margin-bottom: 0;
+        .container-item:last-child { border-bottom: none; }
+        .container-name { font-size: 0.875rem; }
+        .container-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
         }
-
-        .detail-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .detail-value {
-            font-weight: 600;
-        }
-
-        .item-status {
-            width: 8px;
-            height: 8px;
+        .container-status.healthy { background: rgba(16,185,129,0.2); color: var(--green); }
+        .container-status.running { background: rgba(99,102,241,0.2); color: var(--blue); }
+        .container-status.unhealthy { background: rgba(239,68,68,0.2); color: var(--red); }
+        .container-status.stopped { background: rgba(239,68,68,0.2); color: var(--red); }
+        
+        /* LOADING */
+        .loading { text-align: center; padding: 2rem; color: var(--muted); }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--card);
+            border-top-color: var(--blue);
             border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
         }
-
-        .item-status.green { background: var(--success); }
-        .item-status.yellow { background: var(--warning); }
-        .item-status.red { background: var(--danger); }
-
-        .metric-value.good { color: var(--success); }
-        .metric-value.warning { color: var(--warning); }
-        .metric-value.critical { color: var(--danger); }
-
-        .alerts-section {
-            background: var(--surface);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .alerts-title {
-            font-size: 1.125rem;
-            font-weight: 600;
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* ERROR */
+        .error-msg {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid var(--red);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
             margin-bottom: 1rem;
         }
-
-        .alert-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--surface-light);
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            border-left: 3px solid var(--warning);
-        }
-
-        .alert-item.critical {
-            border-left-color: var(--danger);
-        }
-
-        .alert-icon {
-            font-size: 1.25rem;
-        }
-
-        .no-alerts {
-            color: var(--text-muted);
-            text-align: center;
-            padding: 1rem;
-        }
-
+        .error-msg.hidden { display: none; }
+        
         footer {
             text-align: center;
             padding: 1rem;
-            color: var(--text-muted);
+            color: var(--muted);
             font-size: 0.75rem;
-        }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 0.5rem;
-            }
-            
-            header {
-                padding: 1rem;
-            }
-            
-            header h1 {
-                font-size: 1.25rem;
-            }
-            
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
@@ -342,7 +172,7 @@
     <div class="container">
         <header>
             <h1>Infraestrutura N8N</h1>
-            <div class="header-info">
+            <div class="header-row">
                 <div class="status-badge">
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Carregando...</span>
@@ -353,423 +183,201 @@
             </div>
             <div class="last-update" id="lastUpdate"></div>
         </header>
-
-        <div class="error-banner" id="errorBanner">
-            <strong>Erro de conexao</strong>
-            <p>Nao foi possivel carregar os dados. Tentando novamente...</p>
+        
+        <div class="error-msg hidden" id="errorMsg">
+            Erro ao carregar dados. Tentando novamente...
         </div>
-
-        <div class="loading" id="loadingState">
+        
+        <div class="alerts hidden" id="alertsBox">
+            <h3>⚠️ Alertas</h3>
+            <div id="alertsList"></div>
+        </div>
+        
+        <div class="loading" id="loading">
             <div class="spinner"></div>
             <p>Carregando dados...</p>
         </div>
-
-        <div id="alertsContainer"></div>
-
-        <div class="cards-grid" id="cardsGrid" style="display: none;"></div>
-
-        <footer>
-            Dashboard V4.2-PG | Atualizado via PostgreSQL | Schema: <span id="schemaVersion">-</span>
-        </footer>
+        
+        <div class="cards" id="cards" style="display:none;"></div>
+        
+        <footer>Dashboard V5 Simple | Atualiza a cada 60s</footer>
     </div>
 
     <script>
         const GIST_URL = 'https://api.github.com/gists/6f8186d15f6e65b08c04642242607d6e';
-        const UPDATE_INTERVAL = 60000;
         let countdown = 60;
-        let updateTimer, countdownTimer;
 
         async function loadData() {
             try {
-                const response = await fetch(GIST_URL);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const res = await fetch(GIST_URL);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 
-                const gistData = await response.json();
-                const fileContent = gistData.files['dashboard-status.json'].content;
-                const data = JSON.parse(fileContent);
+                const gist = await res.json();
+                const content = gist.files['dashboard-status.json'].content;
+                const data = JSON.parse(content);
                 
-                updateDashboard(data);
-                hideError();
-                showContent();
+                renderDashboard(data);
+                document.getElementById('errorMsg').classList.add('hidden');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('cards').style.display = 'grid';
                 
-                // Atualizar status baseado nos dados
-                const statusDot = document.getElementById('statusDot');
-                const statusText = document.getElementById('statusText');
-                
-                if (data.system.status === 'healthy') {
-                    statusDot.className = 'status-dot';
-                    statusText.textContent = 'Operacional';
-                } else if (data.system.status === 'warning') {
-                    statusDot.className = 'status-dot warning';
-                    statusText.textContent = 'Atencao';
-                } else {
-                    statusDot.className = 'status-dot critical';
-                    statusText.textContent = 'Critico';
-                }
-                
-                // Mostrar ultima atualizacao
-                if (data.timestamp) {
-                    const date = new Date(data.timestamp);
-                    document.getElementById('lastUpdate').textContent = 
-                        'Ultima atualizacao: ' + date.toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'});
-                }
-                
-                // Mostrar schema
-                document.getElementById('schemaVersion').textContent = data.schema || '-';
-                
-            } catch (error) {
-                console.error('Erro:', error);
-                showError();
-                document.getElementById('statusText').textContent = 'Erro';
+            } catch (e) {
+                console.error('Erro:', e);
+                document.getElementById('errorMsg').classList.remove('hidden');
             }
         }
 
-        function updateDashboard(data) {
-            const grid = document.getElementById('cardsGrid');
-            grid.innerHTML = '';
-
-            // Mapear dados - O workflow envia resources separado de system
-            const resources = data.resources || {};
-            const system = data.system || {};
+        function renderDashboard(data) {
+            // Status
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+            dot.className = 'status-dot ' + (data.status || 'healthy');
+            txt.textContent = data.status === 'healthy' ? 'Operacional' : 
+                              data.status === 'warning' ? 'Atencao' : 'Critico';
+            
+            // Ultima atualizacao
+            if (data.timestamp) {
+                const d = new Date(data.timestamp);
+                document.getElementById('lastUpdate').textContent = 
+                    'Ultima atualizacao: ' + d.toLocaleString('pt-BR');
+            }
+            
+            // Alertas
+            const alertsBox = document.getElementById('alertsBox');
+            const alertsList = document.getElementById('alertsList');
+            if (data.alerts && data.alerts.length > 0) {
+                alertsBox.classList.remove('hidden');
+                alertsList.innerHTML = data.alerts.map(a => 
+                    `<div class="alert-item">
+                        <span class="alert-icon">${a.level === 'critical' ? '🔴' : '🟡'}</span>
+                        <span>${a.message}</span>
+                    </div>`
+                ).join('');
+            } else {
+                alertsBox.classList.add('hidden');
+            }
+            
+            // Cards
+            const cards = document.getElementById('cards');
+            cards.innerHTML = '';
             
             // 1. RECURSOS DO SISTEMA
-            const cpuPercent = resources.cpu_percent || 0;
-            const memoryPercent = resources.ram_percent || 0;
-            const diskPercent = resources.disk_percent || 0;
-            const hostname = data.data_timestamp ? 'N8N_MATRIZ' : 'Desconhecido';
+            const r = data.resources || {};
+            const cpuClass = r.cpu_percent > 90 ? 'bad' : r.cpu_percent > 70 ? 'warn' : 'good';
+            const ramClass = r.ram_percent > 90 ? 'bad' : r.ram_percent > 70 ? 'warn' : 'good';
+            const diskClass = r.disk_percent > 90 ? 'bad' : r.disk_percent > 70 ? 'warn' : 'good';
+            const sysIndicator = (r.cpu_percent > 90 || r.ram_percent > 90 || r.disk_percent > 90) ? 'red' :
+                                 (r.cpu_percent > 70 || r.ram_percent > 70 || r.disk_percent > 70) ? 'yellow' : 'green';
             
-            const systemHealth = analyzeSystemHealth(cpuPercent, memoryPercent, diskPercent);
-            grid.appendChild(createResourceCard(
-                'system',
-                'Recursos do Sistema',
-                systemHealth.status,
-                systemHealth.summary,
-                [
-                    {
-                        title: 'Metricas',
-                        items: [
-                            { 
-                                label: 'CPU', 
-                                value: cpuPercent + '%',
-                                status: getMetricStatus(cpuPercent, 70, 90),
-                                valueClass: getMetricClass(cpuPercent, 70, 90)
-                            },
-                            { 
-                                label: 'Memoria', 
-                                value: memoryPercent + '%',
-                                status: getMetricStatus(memoryPercent, 70, 90),
-                                valueClass: getMetricClass(memoryPercent, 70, 90)
-                            },
-                            { 
-                                label: 'Disco', 
-                                value: diskPercent + '%',
-                                status: getMetricStatus(diskPercent, 70, 90),
-                                valueClass: getMetricClass(diskPercent, 70, 90)
-                            }
-                        ]
-                    },
-                    {
-                        title: 'Informacoes',
-                        items: [
-                            { label: 'RAM Usada', value: (resources.ram_used_gb || 0) + ' / ' + (resources.ram_total_gb || 0) + ' GB' },
-                            { label: 'Disco Usado', value: (resources.disk_used_gb || 0) + ' / ' + (resources.disk_total_gb || 0) + ' GB' }
-                        ]
-                    }
-                ]
-            ));
-
-            // 2. CONTAINERS DOCKER
-            const containers = data.containers || [];
-            const containersHealth = analyzeContainersHealth(containers);
-            grid.appendChild(createResourceCard(
-                'containers',
-                'Containers Docker',
-                containersHealth.status,
-                containersHealth.summary,
-                [
-                    {
-                        title: 'Status dos Containers',
-                        items: containers.map(c => ({
-                            label: c.name,
-                            value: c.health || c.status,
-                            status: c.health === 'healthy' ? 'green' : c.status === 'running' ? 'yellow' : 'red',
-                            extra: c.uptime ? c.uptime : ''
-                        }))
-                    }
-                ]
-            ));
-
-            // 3. WORKFLOWS N8N
-            const n8nWorkflows = data.n8n_workflows || {};
-            const workflowsHealth = analyzeN8NWorkflows(n8nWorkflows);
-            grid.appendChild(createResourceCard(
-                'workflows',
-                'Workflows N8N',
-                workflowsHealth.status,
-                workflowsHealth.summary,
-                [
-                    {
-                        title: 'Estatisticas',
-                        items: [
-                            { label: 'Total', value: n8nWorkflows.total || 0 },
-                            { label: 'Ativos', value: n8nWorkflows.active || 0, status: 'green' },
-                            { label: 'Inativos', value: n8nWorkflows.inactive || 0 }
-                        ]
-                    },
-                    {
-                        title: 'Execucoes (24h)',
-                        items: [
-                            { 
-                                label: 'Sucesso', 
-                                value: (n8nWorkflows.executions_24h?.success || 0),
-                                status: 'green'
-                            },
-                            { 
-                                label: 'Erro', 
-                                value: (n8nWorkflows.executions_24h?.error || 0),
-                                status: (n8nWorkflows.executions_24h?.error || 0) > 0 ? 'red' : 'green'
-                            },
-                            { 
-                                label: 'Taxa de Sucesso', 
-                                value: (n8nWorkflows.executions_24h?.success_rate || 100) + '%',
-                                status: getMetricStatus(100 - (n8nWorkflows.executions_24h?.success_rate || 100), 10, 30)
-                            }
-                        ]
-                    }
-                ]
-            ));
-
-            // 4. BACKUPS
-            const backups = data.backups || {};
-            const backupsHealth = analyzeBackupsHealth(backups);
-            grid.appendChild(createResourceCard(
-                'backups',
-                'Backups',
-                backupsHealth.status,
-                backupsHealth.summary,
-                [
-                    {
-                        title: 'Backups Recentes',
-                        items: [
-                            { 
-                                label: 'Ultimo Diario', 
-                                value: backups.last_daily ? formatDate(backups.last_daily) : 'Nunca'
-                            },
-                            { 
-                                label: 'Ultimo Semanal', 
-                                value: backups.last_weekly ? formatDate(backups.last_weekly) : 'Nunca'
-                            }
-                        ]
-                    },
-                    {
-                        title: 'Armazenamento',
-                        items: [
-                            { label: 'Dropbox Usado', value: (backups.dropbox_used_gb || 0) + ' GB' }
-                        ]
-                    }
-                ]
-            ));
-
-            // 5. ALERTAS
-            renderAlerts(data.alerts || []);
-        }
-
-        function renderAlerts(alerts) {
-            const container = document.getElementById('alertsContainer');
-            
-            if (!alerts || alerts.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-
-            const alertsHtml = alerts.map(alert => {
-                const isCritical = alert.level === 'critical';
-                return `
-                    <div class="alert-item ${isCritical ? 'critical' : ''}">
-                        <span class="alert-icon">${isCritical ? '🔴' : '🟡'}</span>
-                        <span>${alert.message}</span>
+            cards.innerHTML += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Recursos do Sistema</span>
+                        <span class="card-indicator ${sysIndicator}"></span>
                     </div>
-                `;
-            }).join('');
-
-            container.innerHTML = `
-                <div class="alerts-section">
-                    <div class="alerts-title">⚠️ Alertas Ativos (${alerts.length})</div>
-                    ${alertsHtml}
+                    <div class="metric">
+                        <span class="metric-label">CPU</span>
+                        <span class="metric-value ${cpuClass}">${r.cpu_percent || 0}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Memoria</span>
+                        <span class="metric-value ${ramClass}">${r.ram_percent || 0}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Disco</span>
+                        <span class="metric-value ${diskClass}">${r.disk_percent || 0}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">RAM Usada</span>
+                        <span class="metric-value">${r.ram_used_gb || 0} / ${r.ram_total_gb || 0} GB</span>
+                    </div>
+                </div>
+            `;
+            
+            // 2. CONTAINERS
+            const containers = data.containers || [];
+            const unhealthy = containers.filter(c => c.health === 'unhealthy' || c.status !== 'running');
+            const containerIndicator = unhealthy.length > 0 ? 'red' : 'green';
+            
+            cards.innerHTML += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Containers Docker</span>
+                        <span class="card-indicator ${containerIndicator}"></span>
+                    </div>
+                    ${containers.map(c => `
+                        <div class="container-item">
+                            <span class="container-name">${c.name}</span>
+                            <span class="container-status ${c.health || c.status}">${c.health || c.status}</span>
+                        </div>
+                    `).join('') || '<p style="color:var(--muted);font-size:0.875rem;">Nenhum container</p>'}
+                </div>
+            `;
+            
+            // 3. WORKFLOWS N8N
+            const wf = data.workflows || {};
+            const ex = wf.executions_24h || {};
+            const wfIndicator = ex.error > 5 ? 'red' : ex.error > 0 ? 'yellow' : 'green';
+            
+            cards.innerHTML += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Workflows N8N</span>
+                        <span class="card-indicator ${wfIndicator}"></span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Total</span>
+                        <span class="metric-value">${wf.total || 0}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Ativos</span>
+                        <span class="metric-value good">${wf.active || 0}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Sucessos (24h)</span>
+                        <span class="metric-value good">${ex.success || 0}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Erros (24h)</span>
+                        <span class="metric-value ${ex.error > 0 ? 'bad' : 'good'}">${ex.error || 0}</span>
+                    </div>
+                </div>
+            `;
+            
+            // 4. BACKUPS
+            const bk = data.backups || {};
+            const hasDaily = bk.last_daily !== null;
+            const bkIndicator = hasDaily ? 'green' : 'yellow';
+            
+            cards.innerHTML += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Backups</span>
+                        <span class="card-indicator ${bkIndicator}"></span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Ultimo Diario</span>
+                        <span class="metric-value">${formatDate(bk.last_daily)}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Ultimo Semanal</span>
+                        <span class="metric-value">${formatDate(bk.last_weekly)}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Dropbox</span>
+                        <span class="metric-value">${bk.dropbox_used_gb || 0} GB</span>
+                    </div>
                 </div>
             `;
         }
 
         function formatDate(dateStr) {
-            if (!dateStr) return 'N/A';
+            if (!dateStr) return 'Nunca';
             try {
-                const date = new Date(dateStr);
-                return date.toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'});
+                return new Date(dateStr).toLocaleString('pt-BR');
             } catch {
                 return dateStr;
             }
-        }
-
-        function analyzeSystemHealth(cpu, memory, disk) {
-            const issues = [];
-            
-            if (cpu >= 90) issues.push('CPU critica');
-            else if (cpu >= 70) issues.push('CPU elevada');
-            
-            if (memory >= 90) issues.push('Memoria critica');
-            else if (memory >= 70) issues.push('Memoria elevada');
-            
-            if (disk >= 90) issues.push('Disco critico');
-            else if (disk >= 70) issues.push('Disco elevado');
-
-            if (issues.length === 0) {
-                return { status: 'green', summary: 'Todos recursos operando normalmente' };
-            } else if (issues.some(i => i.includes('critica') || i.includes('critico'))) {
-                return { status: 'red', summary: 'CRITICO: ' + issues.join(', ') };
-            } else {
-                return { status: 'yellow', summary: 'ATENCAO: ' + issues.join(', ') };
-            }
-        }
-
-        function analyzeContainersHealth(containers) {
-            const noHealthcheckNeeded = ['autoheal', 'portainer'];
-            
-            const unhealthy = containers.filter(c => 
-                c.health === 'unhealthy' || 
-                c.status === 'exited' || 
-                c.status === 'restarting' ||
-                c.status === 'stopped'
-            );
-            
-            const healthy = containers.filter(c => 
-                c.health === 'healthy' || 
-                (c.status === 'running' && noHealthcheckNeeded.includes(c.name))
-            );
-
-            if (unhealthy.length > 0) {
-                const names = unhealthy.map(c => c.name).join(', ');
-                return { 
-                    status: 'red', 
-                    summary: 'CRITICO: ' + names + ' com problema' 
-                };
-            } else if (healthy.length === containers.length) {
-                return { 
-                    status: 'green', 
-                    summary: containers.length + ' containers operacionais' 
-                };
-            } else {
-                return { 
-                    status: 'yellow', 
-                    summary: 'ATENCAO: Alguns containers sem healthcheck' 
-                };
-            }
-        }
-
-        function analyzeN8NWorkflows(workflows) {
-            const active = workflows.active || 0;
-            const errorRate = 100 - (workflows.executions_24h?.success_rate || 100);
-            const errors = workflows.executions_24h?.error || 0;
-
-            if (errors > 10) {
-                return { status: 'red', summary: 'CRITICO: ' + errors + ' erros nas ultimas 24h' };
-            } else if (errorRate > 20) {
-                return { status: 'yellow', summary: 'ATENCAO: Taxa de erro ' + errorRate.toFixed(1) + '%' };
-            } else if (active === 0) {
-                return { status: 'yellow', summary: 'Nenhum workflow ativo' };
-            } else {
-                return { status: 'green', summary: active + ' workflows ativos' };
-            }
-        }
-
-        function analyzeBackupsHealth(backups) {
-            if (!backups.last_daily) {
-                return { status: 'yellow', summary: 'Nenhum backup diario registrado' };
-            }
-            
-            try {
-                const lastBackup = new Date(backups.last_daily);
-                const hoursSince = (Date.now() - lastBackup.getTime()) / 1000 / 60 / 60;
-                
-                if (hoursSince > 48) {
-                    return { status: 'red', summary: 'CRITICO: Backup atrasado ' + Math.floor(hoursSince) + 'h' };
-                } else if (hoursSince > 26) {
-                    return { status: 'yellow', summary: 'ATENCAO: Ultimo backup ha ' + Math.floor(hoursSince) + 'h' };
-                } else {
-                    return { status: 'green', summary: 'Backup em dia' };
-                }
-            } catch {
-                return { status: 'yellow', summary: 'Data do backup invalida' };
-            }
-        }
-
-        function createResourceCard(id, title, health, summary, sections) {
-            const card = document.createElement('div');
-            card.className = 'resource-card';
-            card.dataset.id = id;
-
-            const sectionsHtml = sections.map(section => {
-                const itemsHtml = section.items.map(item => {
-                    const statusDot = item.status ? '<span class="item-status ' + item.status + '"></span>' : '';
-                    const valueClass = item.valueClass ? ' class="metric-value ' + item.valueClass + '"' : '';
-                    const extra = item.extra ? '<small style="color: var(--text-muted); margin-left: 0.5rem;">' + item.extra + '</small>' : '';
-                    
-                    return '<div class="detail-item">' +
-                        '<span class="detail-label">' + statusDot + item.label + '</span>' +
-                        '<span class="detail-value"><span' + valueClass + '>' + item.value + '</span>' + extra + '</span>' +
-                        '</div>';
-                }).join('');
-
-                return '<div class="detail-section">' +
-                    '<div class="detail-section-title">' + section.title + '</div>' +
-                    itemsHtml +
-                    '</div>';
-            }).join('');
-
-            card.innerHTML = 
-                '<div class="card-header">' +
-                    '<span class="card-title">' + title + '</span>' +
-                    '<span class="health-indicator ' + health + '"></span>' +
-                '</div>' +
-                '<div class="card-summary">' + summary + '</div>' +
-                '<div class="expand-hint">Clique para detalhes <span class="expand-icon">▼</span></div>' +
-                '<div class="card-details">' + sectionsHtml + '</div>';
-
-            card.addEventListener('click', function() {
-                toggleCard(card);
-            });
-
-            return card;
-        }
-
-        function toggleCard(card) {
-            const wasExpanded = card.classList.contains('expanded');
-            document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('expanded'));
-            if (!wasExpanded) card.classList.add('expanded');
-        }
-
-        function getMetricStatus(value, yellowThreshold, redThreshold) {
-            if (value >= redThreshold) return 'red';
-            if (value >= yellowThreshold) return 'yellow';
-            return 'green';
-        }
-
-        function getMetricClass(value, yellowThreshold, redThreshold) {
-            if (value >= redThreshold) return 'critical';
-            if (value >= yellowThreshold) return 'warning';
-            return 'good';
-        }
-
-        function showError() {
-            document.getElementById('errorBanner').classList.add('show');
-        }
-
-        function hideError() {
-            document.getElementById('errorBanner').classList.remove('show');
-        }
-
-        function showContent() {
-            document.getElementById('loadingState').style.display = 'none';
-            document.getElementById('cardsGrid').style.display = 'grid';
         }
 
         function updateCountdown() {
@@ -781,18 +389,9 @@
             }
         }
 
-        function init() {
-            loadData();
-            updateTimer = setInterval(loadData, UPDATE_INTERVAL);
-            countdownTimer = setInterval(updateCountdown, 1000);
-        }
-
-        window.addEventListener('beforeunload', function() {
-            clearInterval(updateTimer);
-            clearInterval(countdownTimer);
-        });
-
-        document.addEventListener('DOMContentLoaded', init);
+        // Iniciar
+        loadData();
+        setInterval(updateCountdown, 1000);
     </script>
 </body>
 </html>
